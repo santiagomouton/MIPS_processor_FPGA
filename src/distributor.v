@@ -25,7 +25,7 @@ module distributor
     
     reg [5:0]reg_dest;
 
-    assign operacion   = instruction[31:26];
+    assign operation   = instruction[31:26];
     assign funct       = instruction[5:0];
     assign inmediate   = instruction[15:0];
     assign wire_A      = instruction[20:16];
@@ -35,6 +35,10 @@ module distributor
     assign wire_dest   = reg_dest;
 
 always @(*) begin
+      reg_dest = 5'b00011;
+end
+/* 
+always @(*) begin
     if (regDst == 1'b1) begin
       reg_dest = instruction[15:11];
     end
@@ -42,6 +46,6 @@ always @(*) begin
       reg_dest = wire_A;
     end
 end
-
+ */
 
 endmodule

@@ -8,7 +8,8 @@ module decode_execute_stage
 		parameter NB_EX_CTRL  = 7,
 		parameter NB_MEM_CTRL = 6,
 		parameter NB_WB_CTRL  = 3,
-		parameter NB_OP = 6
+		parameter NB_OP = 6,
+		parameter N_REGDEST = 2
 	)
 	(
 		input wire clock,   
@@ -16,18 +17,20 @@ module decode_execute_stage
 		input wire en_pipeline,
 		// input wire halt_detected_i,
 		input wire [7-1:0] pc_i,
-		// input wire [NB_REG-1:0]	rs_i, rt_i, rd_i,
+		input wire [NB_REG-1:0]	register_a_i, register_b_i, register_rw_i,
 		// input wire [NB_REG-1:0]	shamt_i,
 
 		input wire [NB_FUNCTION-1:0] function_i,
-		input wire [NB_DATA-1:0] data_ra_i,
-		input wire [NB_DATA-1:0] data_rb_i,
+		input wire [NB_DATA-1:0] data_register_a_i,
+		input wire [NB_DATA-1:0] data_register_b_i,
 		input wire [NB_DATA-1:0] inm_ext_i,
 		input wire tipeI,
 
+		input wire [N_REGDEST-1:0] regDest_signal_i,
+
 		input wire [NB_OP-1:0] opcode,
+		input wire [5:0]mem_signals,
 		// input wire [NB_EX_CTRL-1:0] EX_control_i,
-		// input wire [NB_MEM_CTRL-1:0] M_control_i,
 		// input wire [NB_WB_CTRL-1:0] WB_control_i,
 
 		output wire [NB_DATA-1:0] data_ra_o,
@@ -38,13 +41,14 @@ module decode_execute_stage
 		// output wire [NB_REG-1:0] shamt_o,
 
 		output wire [7-1:0] pc_o,
-		// output wire [NB_REG-1:0] rs_o, rt_o, rd_o,
+		output wire [NB_REG-1:0] register_a_o, register_b_o, register_rw_o,
 
 		output wire [NB_FUNCTION-1:0] function_o,
-		
-		output wire [NB_OP-1:0] opcode_o
+		output wire [N_REGDEST-1:0] regDest_signal_o,
+
+		output wire [NB_OP-1:0] opcode_o,
+		output wire [5:0]mem_signals_o
 		// output wire [NB_EX_CTRL-1:0] EX_control_o,
-		// output wire [NB_MEM_CTRL-1:0] M_control_o,
 		// output wire [NB_WB_CTRL-1:0] WB_control_o,
 
 		// output wire halt_detected_o	
@@ -53,12 +57,14 @@ module decode_execute_stage
 	reg [7-1:0] pc_reg;
 	reg [NB_DATA-1:0] data_ra_reg, data_rb_reg, inm_ext_reg;
 	reg tipeI_reg;
-	// reg [NB_REG-1:0] rs_reg, rt_reg, rd_reg, shamt_reg;
+	reg [NB_REG-1:0] register_a_reg, register_b_reg, register_wr_reg;//, shamt_reg;
 
 	reg [NB_FUNCTION-1:0] function_reg;
+	reg [N_REGDEST-1:0] regDest_signal_reg;
+	reg [NB_OP-1:0] opcode_reg;
+	reg [5:0]mem_signals_reg;
 	// reg halt_detected;
 	// reg [NB_EX_CTRL-1:0] EX_control_reg;
-	// reg [NB_MEM_CTRL-1:0] M_control_reg;
 	// reg [NB_WB_CTRL-1:0] WB_control_reg;
 
 
@@ -74,8 +80,10 @@ module decode_execute_stage
 					inm_ext_reg  <= 32'b0;
 					// shamt_reg    <= 5'b0;
 					function_reg <= 6'b0;
+					regDest_signal_reg <= 2'b10;
+					opcode_reg <= 6'b0;
 					tipeI_reg <= 1'b0;
-
+					mem_signals_reg <= 6'b000000;
 				end
 			else
 				begin
@@ -83,12 +91,15 @@ module decode_execute_stage
 						begin
 							// halt_detected <= halt_detected_i;
 						    pc_reg        <= pc_i;
-							data_ra_reg   <= data_ra_i;
-							data_rb_reg   <= data_rb_i;
+							data_ra_reg   <= data_register_a_i;
+							data_rb_reg   <= data_register_b_i;
 							inm_ext_reg   <= inm_ext_i;
 							// shamt_reg     <= shamt_i;
 							function_reg  <= function_i;
+							regDest_signal_reg  <= regDest_signal_i;
+							opcode_reg 	  <= opcode;
 							tipeI_reg  	  <= tipeI;
+							mem_signals_reg <= mem_signals_i;
 						end
 					else
 						begin
@@ -99,35 +110,38 @@ module decode_execute_stage
 							inm_ext_reg   <= inm_ext_reg;
 							// shamt_reg     <= shamt_reg;
 							function_reg  <= function_reg;
+							regDest_signal_reg  <= regDest_signal_reg;
+							opcode_reg 	  <= opcode_reg;
 							tipeI_reg     <= tipeI_reg;
+							mem_signals_reg <= mem_signals_reg;
 						end
 				end
 		end	
-/* 
+ 
 	always @(negedge clock)
 		begin
 			if (reset)
 				begin
-					rs_reg <= 5'b0;
-					rt_reg <= 5'b0;
-					rd_reg <= 5'b0;
+					register_a_reg <= 5'b0;
+					register_b_reg <= 5'b0;
+					register_wr_reg <= 5'b0;
 				end
 			else
 				begin
 					if (en_pipeline)
 						begin
-							rs_reg <= rs_i;
-							rt_reg <= rt_i;
-							rd_reg <= rd_i;
+							register_a_reg <= register_a_i;
+							register_b_reg <= register_b_i;
+							register_wr_reg <= register_rw_i;
 						end	
 					else
 						begin
-							rs_reg <= rs_reg;
-							rt_reg <= rt_reg;
-							rd_reg <= rd_reg;
+							register_a_reg <= register_a_reg;
+							register_b_reg <= register_b_reg;
+							register_wr_reg <= register_wr_reg;
 						end
 				end
-		end */
+		end
 
 /* 
 	always @(negedge clock)
@@ -135,7 +149,6 @@ module decode_execute_stage
 			if (reset)
 				begin
 					EX_control_reg <= 7'b0;
-					// M_control_reg  <= 6'b0;
 					// WB_control_reg <= 3'b0;
 				end				
 			else
@@ -143,13 +156,11 @@ module decode_execute_stage
 					if (en_pipeline)
 						begin
 							EX_control_reg <= EX_control_i;
-							// M_control_reg  <= M_control_i;
 							// WB_control_reg <= WB_control_i;
 						end
 					else
 						begin
 							EX_control_reg <= EX_control_reg;
-							// M_control_reg  <= M_control_reg;
 							// WB_control_reg <= WB_control_reg;			
 						end
 				end				
@@ -161,15 +172,17 @@ module decode_execute_stage
 	assign inm_ext_o = inm_ext_reg;
 
 	assign function_o = function_reg;
+	assign opcode_o = opcode_reg;
+	assign regDest_signal_o = regDest_signal_reg;
 	assign tipeI_o = tipeI_reg;
 	// assign shamt_o    = shamt_reg;
 
-	// assign rs_o      = rs_reg;
-	// assign rt_o      = rt_reg;
-	// assign rd_o      = rd_reg;
+	assign register_a_o      = register_a_reg;
+	assign register_b_o      = register_b_reg;
+	assign register_rw_o      = register_wr_reg;
 
+	assign mem_signals_o	= mem_signals_reg;
 	// assign EX_control_o = EX_control_reg;
-	// assign M_control_o = M_control_reg;
 	// assign WB_control_o = WB_control_reg;
 
 
