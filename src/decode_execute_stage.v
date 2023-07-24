@@ -21,17 +21,17 @@ module decode_execute_stage
 		// input wire [NB_REG-1:0]	shamt_i,
 
 		input wire [NB_FUNCTION-1:0] function_i,
-		input wire [NB_DATA-1:0] data_register_a_i,
-		input wire [NB_DATA-1:0] data_register_b_i,
+		input wire [NB_DATA-1:0] data_ra_i,
+		input wire [NB_DATA-1:0] data_rb_i,
 		input wire [NB_DATA-1:0] inm_ext_i,
 		input wire tipeI,
 
 		input wire [N_REGDEST-1:0] regDest_signal_i,
 
 		input wire [NB_OP-1:0] opcode,
-		input wire [5:0]mem_signals,
+		input wire [5:0]mem_signals_i,
+		input wire [2:0]wb_signals_i,
 		// input wire [NB_EX_CTRL-1:0] EX_control_i,
-		// input wire [NB_WB_CTRL-1:0] WB_control_i,
 
 		output wire [NB_DATA-1:0] data_ra_o,
 		output wire [NB_DATA-1:0] data_rb_o,
@@ -47,9 +47,9 @@ module decode_execute_stage
 		output wire [N_REGDEST-1:0] regDest_signal_o,
 
 		output wire [NB_OP-1:0] opcode_o,
-		output wire [5:0]mem_signals_o
+		output wire [5:0]mem_signals_o,
+		output wire [2:0]wb_signals_o
 		// output wire [NB_EX_CTRL-1:0] EX_control_o,
-		// output wire [NB_WB_CTRL-1:0] WB_control_o,
 
 		// output wire halt_detected_o	
 	);
@@ -63,9 +63,9 @@ module decode_execute_stage
 	reg [N_REGDEST-1:0] regDest_signal_reg;
 	reg [NB_OP-1:0] opcode_reg;
 	reg [5:0]mem_signals_reg;
+	reg [5:0]wb_signals_reg;
 	// reg halt_detected;
 	// reg [NB_EX_CTRL-1:0] EX_control_reg;
-	// reg [NB_WB_CTRL-1:0] WB_control_reg;
 
 
 	// assign halt_detected_o = halt_detected;
@@ -84,6 +84,7 @@ module decode_execute_stage
 					opcode_reg <= 6'b0;
 					tipeI_reg <= 1'b0;
 					mem_signals_reg <= 6'b000000;
+					wb_signals_reg <= 6'b000;
 				end
 			else
 				begin
@@ -91,8 +92,8 @@ module decode_execute_stage
 						begin
 							// halt_detected <= halt_detected_i;
 						    pc_reg        <= pc_i;
-							data_ra_reg   <= data_register_a_i;
-							data_rb_reg   <= data_register_b_i;
+							data_ra_reg   <= data_ra_i;
+							data_rb_reg   <= data_rb_i;
 							inm_ext_reg   <= inm_ext_i;
 							// shamt_reg     <= shamt_i;
 							function_reg  <= function_i;
@@ -100,6 +101,7 @@ module decode_execute_stage
 							opcode_reg 	  <= opcode;
 							tipeI_reg  	  <= tipeI;
 							mem_signals_reg <= mem_signals_i;
+							wb_signals_reg <= wb_signals_i;
 						end
 					else
 						begin
@@ -114,6 +116,7 @@ module decode_execute_stage
 							opcode_reg 	  <= opcode_reg;
 							tipeI_reg     <= tipeI_reg;
 							mem_signals_reg <= mem_signals_reg;
+							wb_signals_reg <= wb_signals_reg;
 						end
 				end
 		end	
@@ -149,19 +152,16 @@ module decode_execute_stage
 			if (reset)
 				begin
 					EX_control_reg <= 7'b0;
-					// WB_control_reg <= 3'b0;
 				end				
 			else
 				begin
 					if (en_pipeline)
 						begin
 							EX_control_reg <= EX_control_i;
-							// WB_control_reg <= WB_control_i;
 						end
 					else
 						begin
-							EX_control_reg <= EX_control_reg;
-							// WB_control_reg <= WB_control_reg;			
+							EX_control_reg <= EX_control_reg;		
 						end
 				end				
 		end
@@ -182,8 +182,8 @@ module decode_execute_stage
 	assign register_rw_o      = register_wr_reg;
 
 	assign mem_signals_o	= mem_signals_reg;
+	assign wb_signals_o	= wb_signals_reg;
 	// assign EX_control_o = EX_control_reg;
-	// assign WB_control_o = WB_control_reg;
 
 
 endmodule 

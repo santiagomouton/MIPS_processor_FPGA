@@ -7,13 +7,13 @@
 `define N_BYTE 7:0
 `define N_HALF 15:0
 
-`define MEM_READ 5
-`define MEM_WRITE 4
-`define SIZE 3:1
-`define SIGNED 0
+`define MEM_READ 4
+`define MEM_WRITE 3
+`define SIZE 2:0
+`define SIGNED 5
 
-`define N_ELEMENTS 128
-`define ADDRWIDTH $clog2(`N_ELEMENTS)
+// `define N_ELEMENTS 128
+// `define ADDRWIDTH $clog2(`N_ELEMENTS)
 
 module interfaceDataMEM
 	#(
@@ -23,95 +23,96 @@ module interfaceDataMEM
 	(
 		input wire [NB_DATA-1:0] data_write_i,		
 		input wire [NB_DATA-1:0] data_read_i,
-   		input wire [NB_MEM_CTRL-1:0] MEM_control_i,
+   		input wire [NB_MEM_CTRL-1:0] mem_signals_i,
 
    		output wire [NB_DATA-1:0] data_write_o,
    		output wire [NB_DATA-1:0] data_read_o
-	
 	);
 
-	reg [NB_DATA-1:0] reg_data_write;
-	reg [NB_DATA-1:0] reg_data_read;	
-/*************************************************************************/
-	assign data_write_o = reg_data_write;
-	assign data_read_o  = reg_data_read;
-/*************************************************************************/
+	reg [NB_DATA-1:0] data_write_reg;
+	reg [NB_DATA-1:0] data_read_reg;
 
-	always @(*) //Lectura
+	reg [NB_DATA-1:0] data_read_paraver_reg;
+
+	assign data_write_o = data_write_reg;
+	assign data_read_o  = data_read_reg;
+    
+
+	always @(*)
 		begin	
-			if (MEM_control_i[`MEM_READ])
+			if (mem_signals_i[`MEM_READ])
 	            begin 	
-	                if (MEM_control_i[`SIGNED]) 
+	                if (mem_signals_i[`SIGNED]) 
 	                	begin 
-			            	case (MEM_control_i[`SIZE])			            		
+			            	case (mem_signals_i[`SIZE])			            		
 				                	`BYTE:	                		
 				                		begin
-				                			reg_data_read = {{24'b0}, data_read_i[`N_BYTE]};   			
+				                			data_read_reg = {{24'b0}, data_read_i[`N_BYTE]};   		  			
 				                		end	                		                
 				                            
 				                	`HALF_WORD:
 				                		begin				                			                			
-				                			reg_data_read = {16'b0, data_read_i[`N_HALF]};  
+				                			data_read_reg = {16'b0, data_read_i[`N_HALF]};  
 				                    	end
 				                    	
 				                	`WORD:
 				                	  begin
-									 		reg_data_read = data_read_i;                   	
+									 		data_read_reg = data_read_i;     
 				                		end
 
 				                    default:
-				                    	reg_data_read = 32'b0;        
+				                    	data_read_reg = 32'b0;        
 	                    	
 	                			endcase
 	                	end
 	              	else
 	              		begin
-	              			case (MEM_control_i[`SIZE])	              				
+	              			case (mem_signals_i[`SIZE])	              				
 				                	`BYTE:	                		
 				                		begin
-				                			reg_data_read = {{24{data_read_i[7]}}, data_read_i[`N_BYTE]}; 			                			           			
+				                			data_read_reg = {{24{data_read_i[7]}}, data_read_i[`N_BYTE]}; 			                			           			
 				                		end	                		                
 				                            
 				                	`HALF_WORD:
 				                		begin	                			
-				                			reg_data_read = {{16{data_read_i[15]}}, data_read_i[`N_HALF]};   
+				                			data_read_reg = {{16{data_read_i[15]}}, data_read_i[`N_HALF]};   
 				                    	end
 				                    	
 				                	`WORD:
 				                	  begin
-				                		reg_data_read = data_read_i;                 	
+				                		data_read_reg = data_read_i;                 	
 				                		end
 
 				                    default:
-				                    	reg_data_read = 32'b0;        
+				                    	data_read_reg = 32'b0;        
 	                    	
 	                		endcase
 	              		end
 	            end	
 	        else
-				reg_data_read = 32'b0;	  
+				data_read_reg = 32'b0;	  
 		end
 
-/*************************************************************************/
-	always @(*) //Escritura
+
+	always @(*)
 		begin
-			if (MEM_control_i[`MEM_WRITE])
+			if (mem_signals_i[`MEM_WRITE])
 	            begin    
-	            	case (MEM_control_i[`SIZE])
+	            	case (mem_signals_i[`SIZE])
 	                	`BYTE:
-	                		reg_data_write = data_write_i[`N_BYTE];                
+	                		data_write_reg = data_write_i[`N_BYTE];                
 	                            
 	                	`HALF_WORD:               
-	                    	reg_data_write = data_write_i[`N_HALF];	                    
+	                    	data_write_reg = data_write_i[`N_HALF];	                    
 
 	                	`WORD:                    
-	                    	reg_data_write = data_write_i;         
+	                    	data_write_reg = data_write_i;         
 	                    default:
-	                    	reg_data_write = 32'b0;
+	                    	data_write_reg = 32'b0;
 	                endcase
 	            end
 	        else
-	            reg_data_write = 32'b0;
+	            data_write_reg = 32'b0;
 		end
 
 endmodule

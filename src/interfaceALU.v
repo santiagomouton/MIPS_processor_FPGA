@@ -42,7 +42,9 @@ module interfaceALU
 				6'b001000 : reg_alu_op = 6'b100000;  // ADDI -> ADD
 				6'b001100 : reg_alu_op = 6'b100100;  // ANDI -> AND
 				6'b001101 : reg_alu_op = 6'b100101;  // ORI -> OR
-				6'b001110 : reg_alu_op = 6'b100110;	 // XORI -> XOR		 
+				6'b100011 : reg_alu_op = 6'b100000;	 // LW -> ADD 
+				6'b010011 : reg_alu_op = 6'b100000;	 // LWU -> ADD 
+				6'b100000 : reg_alu_op = 6'b100000;	 // LB -> ADD 
 				// `SLTI_ALUCODE     :	reg_alu_op = `SLT;
 				// `LUI_ALUCODE      : reg_alu_op = `LUI;
 				default :  reg_alu_op = 6'b000000;

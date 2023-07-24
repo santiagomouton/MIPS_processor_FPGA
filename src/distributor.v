@@ -28,8 +28,8 @@ module distributor
     assign operation   = instruction[31:26];
     assign funct       = instruction[5:0];
     assign inmediate   = instruction[15:0];
-    assign wire_A      = instruction[20:16];
-    assign wire_B      = instruction[25:21];
+    assign wire_A      = instruction[25:21];
+    assign wire_B      = instruction[20:16];
     assign direction   = instruction[25:0];
     //assign wire_dest = instruction[15:11];
     assign wire_dest   = reg_dest;

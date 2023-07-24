@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module test_decode_ex;
+module test_data_mem;
     parameter           PERIOD  = 40; // debe dar 50 Mh
     parameter           N_CLOCK = 163;
 //    parameter           CHANGE_RX = (N_CLOCK*3)/4; // 122
@@ -38,17 +38,21 @@ module test_decode_ex;
 
     reg [7-1:0]next_addr_i;
 
-    wire [NB_DATA-1:0] operation_o;
+    wire [NB_DATA-1:0] operation_o_paraver;
 
     wire [NB_DATA-1:0]inmediate_o_paraver;
 
     wire [NB_DATA-1:0]data_a_o_paraver;
 
-    wire tipeI_paraver;
+    wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver;
 
-    wire [5-1:0]dir_o_paraver;
+    wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver;
 
-    top_from_mem_to_execute mytop
+    wire [6-1:0]mem_signals_o_paraver;
+
+    wire [5-1:0]wire_A_paraver;
+
+    top_pc_to_data_mem mytop
     (
 		.clock(clock),
 		.reset(reset),
@@ -68,11 +72,13 @@ module test_decode_ex;
         .data_o_fetch(data_o_fetch),
         .enable(enable),
         .next_addr_i(next_addr_i),
-        .operation_o(operation_o),
+        .operation_o_paraver(operation_o_paraver),
         .inmediate_o_paraver(inmediate_o_paraver),
         .data_a_o_paraver(data_a_o_paraver),
-		.tipeI_paraver(tipeI_paraver),
-        .dir_o_paraver(dir_o_paraver)
+        .dataInterfaceMEM_o_paraver(dataInterfaceMEM_o_paraver),
+        .dataWr_ex_mem_stage_o_paraver(dataWr_ex_mem_stage_o_paraver),
+        .mem_signals_o_paraver(mem_signals_o_paraver),
+        .wire_A_paraver(wire_A_paraver)
     );
         
     initial
@@ -88,7 +94,7 @@ module test_decode_ex;
             empty       = 1;
             clock       = 0; 
             reset       = 1;
-            din = 8'b00000001;
+            din = 8'b00000000;
             #PERIOD reset = 0;
             #PERIOD empty = 0;
             #PERIOD empty = 1;
@@ -97,11 +103,11 @@ module test_decode_ex;
             #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
             wait( finish_send == 1'b1);
-            din = 8'b00000000;
+            din = 8'b01000000;
             #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
             wait( finish_send == 1'b1);
-            din = 8'b00100000; //addi
+            din = 8'b10000001; //lb
             #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
             wait( finish_send == 1'b1);
