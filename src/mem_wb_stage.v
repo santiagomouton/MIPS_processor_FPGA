@@ -1,11 +1,9 @@
-`include "parameters.vh"
 
 module mem_wb_stage
 	#(
 		parameter NB_DATA = 32,
 		parameter NB_WB_CTRL = 3,
-		parameter NB_REG  = 5,
-		parameter NB_MEM_TO_REG = 2
+		parameter NB_REG  = 5
 	)
 	(
 		input wire clock_i,
@@ -22,29 +20,29 @@ module mem_wb_stage
 		input wire [2:0]wb_signals_i,
 
 		output wire [NB_REG-1:0] write_register_o,
-		// output wire [NB_MEM_TO_REG-1:0] mem_to_reg_o,
+		output wire [2-1:0] mem_to_reg_o,
 
 		output wire [NB_DATA-1:0] mem_data_read_o,
 		output wire [NB_DATA-1:0] alu_result_o,
-		output wire [7-1:0] pc_o
+		output wire [7-1:0] pc_o,
 		// output wire [NB_DATA-1:0] inm_ext_o,
 
-		output wire reg_write_o,
+		output wire reg_write_o
 		// output wire halt_detected_o	
 	
 	);
 
-	// reg [NB_MEM_TO_REG-1:0] mem_to_reg;
+	reg [2-1:0] mem_to_reg;
 	reg [NB_REG-1:0] write_reg;
 	reg reg_write;
 	reg [NB_DATA-1:0] mem_data_reg, alu_result_reg, inm_ext_reg;
 
-	reg [`ADDRWIDTH-1:0] pc_reg;
+	reg [7-1:0] pc_reg;
 	// reg halt_detected;
 
 	// assign halt_detected_o = halt_detected;
 	
-	// assign mem_to_reg_o     = mem_to_reg;
+	assign mem_to_reg_o     = mem_to_reg;
 	assign reg_write_o      = reg_write;
 	assign write_register_o = write_reg;
 
@@ -71,7 +69,7 @@ module mem_wb_stage
 					if (enable_pipe_i)
 						begin
 							// halt_detected  <= halt_detected_i;
-							// mem_to_reg     <= wb_signals_i[1:0];
+							mem_to_reg     <= wb_signals_i[1:0];
 							reg_write      <= wb_signals_i[2];
 							write_reg      <= write_register_i;
 							mem_data_reg   <= mem_data_read_i;

@@ -8,7 +8,8 @@ module pc
 		input wire reset,
 		input wire enable,				
 		input wire [NB_DATA-1:0] next_addr_i,
-		output wire [NB_DATA-1:0] next_addr_o
+		output wire [NB_DATA-1:0] next_addr_o,
+		output wire [NB_DATA-1:0] next_addr_plus_four_o
 	);
 
 	reg [NB_DATA-1:0] reg_addr;
@@ -29,5 +30,6 @@ module pc
 		end
 
 	assign next_addr_o = reg_addr;
+	assign next_addr_plus_four_o = reg_addr + 7'b0000001;
 
 endmodule

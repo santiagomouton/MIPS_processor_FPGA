@@ -19,11 +19,11 @@ module control_unit
         output wire tipeI,
         output wire branch,
         output wire memWrite,
-        output wire [N_REGDEST-1:0]regDest_signal,
+        output wire [N_REGDEST-1:0]regDest_signal, // 1-0(00: wireB, 01: wireWR, 10: 32'b1)
         output wire [NB_OP-1:0]opcode_o,
 
         output wire [5:0]mem_signals, // 5(sign), 4-3(mem_read, mem_write), 2-0(Word, HalfWord, Byte)  
-        output wire [2:0]wb_signals // 2(regWrite), 1-0(mem_to_reg)  
+        output wire [2:0]wb_signals // 2(regWrite), 1-0(mem_to_reg)(00:memData_to_reg, 01: alu_result_to_reg, 10: pc_to_reg)
 
     );
 
@@ -61,90 +61,78 @@ module control_unit
 
         case (opcode)
             6'b000000: begin
-                regDest_reg = 1;
                 tipeI_reg = 0;
                 memWrite_reg = 1'b0;
-                regDest_signal_reg = 3'b00;
+                regDest_signal_reg = 3'b01;
                 mem_signals_reg = 6'b000000;
-                wb_signals_reg = 3'b100; 
+                wb_signals_reg = 3'b101; 
                 /* if (conditions) begin
                     regWrite_reg <= 1;
                 end */
             end
             6'b001000: begin  //ADDI
-                regDest_reg = 0;
                 tipeI_reg = 1;
                 memWrite_reg = 1'b0;
-                regDest_signal_reg = 3'b01;
+                regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b000000;
-                wb_signals_reg = 3'b100;
+                wb_signals_reg = 3'b101;
             end
             6'b100011: begin // LW
-                regDest_reg = 0;
                 tipeI_reg = 1;
                 memWrite_reg = 1'b1;
-                regDest_signal_reg = 3'b01;
+                regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b110100;
                 wb_signals_reg = 3'b100;
             end
             6'b010011: begin // LWU
-                regDest_reg = 0;
                 tipeI_reg = 1;
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b010100;
                 wb_signals_reg = 3'b100;
             end
             6'b100000: begin // LB
-                regDest_reg = 0;
                 tipeI_reg = 1;
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b110001;
                 wb_signals_reg = 3'b100;
             end
-            6'b100100: begin
-                regDest_reg = 0;
+            6'b111110: begin  //NOP
                 tipeI_reg = 0;
                 regDest_signal_reg = 3'b00;
-                mem_signals_reg = 6'b010100;
+                mem_signals_reg = 6'b000000;
                 wb_signals_reg = 3'b000;
             end
-            6'b10101: begin //
-                regDest_reg = 0;
+            6'b111111: begin // HALT
                 tipeI_reg = 0;
-                regDest_signal_reg = 3'b00;
-                mem_signals_reg = 6'b010100;
-                wb_signals_reg = 3'b000;
+                regDest_signal_reg = 3'bxx;
+                mem_signals_reg = 6'b000000;
+                wb_signals_reg = 3'bxxx;
             end
             6'b101000: begin
-                regDest_reg = 0;
                 tipeI_reg = 0;
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b010100;
                 wb_signals_reg = 3'b000;
             end
             6'b101001: begin // SH
-                regDest_reg = 0;
                 tipeI_reg = 0;
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b010100;
                 wb_signals_reg = 3'b000;
             end
             6'b101011: begin //sw
-                regDest_reg = 0;
                 tipeI_reg = 0;
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b010100;
                 wb_signals_reg = 3'b000;
             end
             6'b001000: begin // 
-                regDest_reg = 0;
                 tipeI_reg = 0;
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b010100;
                 wb_signals_reg = 3'b000;
             end
             default: begin
-                regDest_reg = 0;
                 tipeI_reg = 0;
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b010100;

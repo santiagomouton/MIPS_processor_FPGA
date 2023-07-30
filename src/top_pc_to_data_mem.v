@@ -44,7 +44,8 @@ module top_pc_to_data_mem
 		output wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver,
 		output wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver,
 		output wire [6-1:0]mem_signals_o_paraver,
-        output wire [4:0] wire_A_paraver
+        output wire [4:0] wire_A_paraver,
+        output wire [1:0] mem_to_reg_signal_paraver
 	);
 
 	wire [7:0]  dout;
@@ -59,6 +60,7 @@ module top_pc_to_data_mem
 	wire [NB_DATA-1:0]o_data_mem;
 	wire [6:0]o_dir_mem_write;
 	wire [6:0]o_dir_mem_read;
+	wire [6:0]next_addr_plus_four_o;
 
 	wire [5 - 1:0]rx_state;
 
@@ -136,6 +138,7 @@ module top_pc_to_data_mem
     wire [NB_REG-1:0] writeReg_mem_wb_stage_o;
     wire [7-1:0] pc_mem_wb_stage_o;
     wire reg_write_wb_stage_o;
+    wire [2-1:0] mem_to_reg_mem_wb_stage_o;
 
 	// data para escribir en registro
 	wire [NB_DATA-1:0] data_write_to_reg;
@@ -156,23 +159,24 @@ module top_pc_to_data_mem
 	/* salida memoria a fetch stage */
 	assign data_o_fetch = data_o;
 
-    /* salida de decode_execute_stage */
+    /* señales paraver */
 	assign inmediate_o_paraver = o_B_to_alu;
 	assign data_a_o_paraver = data_ra_register;
-    assign dataInterfaceMEM_o_paraver = data_read_interface_o;
-    assign dataWr_ex_mem_stage_o_paraver = data_wr_to_mem_ex_mem_stage_o;
+    assign dataInterfaceMEM_o_paraver = data_write_to_reg;
+    assign dataWr_ex_mem_stage_o_paraver = data_read_interface_o;
     assign mem_signals_o_paraver = mem_signals_ex_mem_o;
+    assign mem_to_reg_signal_paraver = mem_to_reg_mem_wb_stage_o;
     assign operation_o_paraver = alu_result_i;
     assign wire_A_paraver = wire_A;
 
+
     mux_wb mux_wb
     (
-		.op1_i(alu_result_mem_wb_o),
-		.op2_i(mem_data_read_mem_wb_stage_o),
+		.op1_i(mem_data_read_mem_wb_stage_o),
+		.op2_i(alu_result_mem_wb_o),
 		.op3_i({{25'b0}, pc_mem_wb_stage_o}),
-		.op4_i(),
-		.[NB_SEL-1:0] sel_i,
-
+		.op4_i(32'b0),
+		.sel_i(mem_to_reg_mem_wb_stage_o),
 		.data_o(data_write_to_reg)
     );
 
@@ -190,7 +194,8 @@ module top_pc_to_data_mem
 		.mem_data_read_o(mem_data_read_mem_wb_stage_o),
 		.alu_result_o(alu_result_mem_wb_o),
 		.pc_o(pc_mem_wb_stage_o),
-        .reg_write_o(reg_write_wb_stage_o)
+        .reg_write_o(reg_write_wb_stage_o),
+        .mem_to_reg_o(mem_to_reg_mem_wb_stage_o)
     );
 
     DATAmem DATAmem
@@ -351,7 +356,7 @@ module top_pc_to_data_mem
 	(
 		.clock_i(clock),  
 		.en_pipeline(en_pipeline),		
-		.pc_i(o_dir_mem_read),
+		.pc_i(next_addr_plus_four_o),
 		.pc_o(pc_o),
 		.instruction_i(data_o),
 		.instruction_o(instruction_o)	
@@ -380,8 +385,9 @@ module top_pc_to_data_mem
 		.clock(clock),				
 		.reset(reset),	
 		.enable(enable),				
-		.next_addr_i(next_addr_i),
-		.next_addr_o(o_dir_mem_read)
+		.next_addr_i(next_addr_plus_four_o),
+		.next_addr_o(o_dir_mem_read),
+        .next_addr_plus_four_o(next_addr_plus_four_o)
 	);
 
 	interfaceMEM interface_mem

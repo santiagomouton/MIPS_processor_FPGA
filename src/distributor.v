@@ -22,8 +22,6 @@ module distributor
     output wire [NB_DIRECTION-1:0]direction,
     output wire [NB_REGD-1:0]wire_dest
 );
-    
-    reg [5:0]reg_dest;
 
     assign operation   = instruction[31:26];
     assign funct       = instruction[5:0];
@@ -31,21 +29,6 @@ module distributor
     assign wire_A      = instruction[25:21];
     assign wire_B      = instruction[20:16];
     assign direction   = instruction[25:0];
-    //assign wire_dest = instruction[15:11];
-    assign wire_dest   = reg_dest;
-
-always @(*) begin
-      reg_dest = 5'b00011;
-end
-/* 
-always @(*) begin
-    if (regDst == 1'b1) begin
-      reg_dest = instruction[15:11];
-    end
-    else begin
-      reg_dest = wire_A;
-    end
-end
- */
+    assign wire_dest   = instruction[15:11];
 
 endmodule
