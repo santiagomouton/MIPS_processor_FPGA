@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module test_data_mem;
+module test_pipeline;
     parameter           PERIOD  = 40; // debe dar 50 Mh
     parameter           N_CLOCK = 163;
 //    parameter           CHANGE_RX = (N_CLOCK*3)/4; // 122
@@ -15,28 +15,11 @@ module test_data_mem;
     reg  [N_DATA - 1:0] din;
     wire read_tx;
     reg en_read_i;
-    // wire [NB_DATA-1:0] instruction_o;
 
     reg  empty;
 
-    reg enable;
-    //reg  [NB_DATA - 1:0] o_tx; //nose para que es
-    //wire  tx_done_tick;
+    reg enable_i;
     wire finish_send;
-    wire finish_recieve;
-
-    wire [N_DATA - 1:0]salida_de_rx;
-    wire conexion_tx_rx;
-    wire [5 - 1:0]rx_state_o;
-
-    wire [NB_DATA-1:0]intMem_data_o;
-    wire intMem_ready;
-
-    wire [NB_DATA-1:0]data_o_fetch;
-
-    wire [7-1:0] pc_o;
-
-    reg [7-1:0]next_addr_i;
 
     wire [NB_DATA-1:0] operation_o_paraver;
 
@@ -54,26 +37,16 @@ module test_data_mem;
 
     wire [2-1:0]mem_to_reg_signal_paraver;
 
-    top_pc_to_data_mem mytop
+    pipeline pipeline
     (
 		.clock(clock),
 		.reset(reset),
 		.din(din),
 		.read_tx(read_tx),
         .empty(empty),
-        .pc_o(pc_o),
 		.en_read_i(en_read_i),
-		// .instruction_o(instruction_o),
         .finish_send(finish_send),
-        .finish_recieve(finish_recieve),
-        .salida_de_rx(salida_de_rx),
-        .rx_state_o(rx_state_o),
-        .conexion_tx_rx(conexion_tx_rx),
-        .intMem_ready(intMem_ready),
-        .intMem_data_o(intMem_data_o),
-        .data_o_fetch(data_o_fetch),
-        .enable(enable),
-        .next_addr_i(next_addr_i),
+        .enable_i(enable_i),
         .operation_o_paraver(operation_o_paraver),
         .inmediate_o_paraver(inmediate_o_paraver),
         .data_a_o_paraver(data_a_o_paraver),
@@ -114,7 +87,7 @@ module test_data_mem;
             #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
             wait( finish_send == 1'b1);
-
+/* 
             din = 8'b00000000;
             #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
@@ -164,7 +137,7 @@ module test_data_mem;
             din = 8'b10000000;
             #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
-            wait( finish_send == 1'b1);
+            wait( finish_send == 1'b1); */
 
             din = 8'b11111111;
             #(PERIOD*2) empty = 0;
@@ -184,8 +157,7 @@ module test_data_mem;
             wait( finish_send == 1'b1);
 
             #(PERIOD*5)
-            enable = 1'b1;
-            next_addr_i = 7'b0000000;
+            enable_i = 1'b1;
             en_read_i = 1'b1;
 
         end

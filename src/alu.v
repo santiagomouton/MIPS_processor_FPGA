@@ -19,7 +19,7 @@ module alu
 //    assign salida_B = i_b;
     
     always @(*) begin //CIRCUITO CONBINACIONAL
-        o_o = 8'bxxxxxxxx_xxxxxxxx_xxxxxxxx_xxxxxxxx; //valor por DEFAULT
+        o_o = 32'bxxxxxxxx_xxxxxxxx_xxxxxxxx_xxxxxxxx; //valor por DEFAULT
         case (i_op)
             /* ADD */
             6'b100000: begin

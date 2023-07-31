@@ -23,7 +23,7 @@ module decode_top
         output wire [1:0]regDest_signal,
         output wire tipeI_signal,
 
-        output wire [NB_OPCODE:0] opcode_o,
+        output wire [NB_OPCODE-1:0] opcode_o,
         output wire [5:0] funct_o,
         output wire [NB_DATA-1:0] wire_inmediate_o,
         output wire [NB_DATA-1:0] data_ra_o,
@@ -115,8 +115,8 @@ module decode_top
 
 	control_unit control_unit
 	(
-		.clock(clock),
-        .reset(reset),
+		.clock(clock_i),
+        .reset(reset_i),
         .opcode(operation),
         .funct(funct),
         .regDest(regDest),

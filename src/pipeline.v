@@ -18,13 +18,28 @@ module pipeline
 		input wire reset,		
 		input wire enable_i,
 		input wire en_read_i,
+        input wire [N_BITS - 1:0] din,
+        input wire read_tx,
+        input wire empty,
 
+        output wire finish_send,
+
+		output wire [NB_DATA-1:0]operation_o_paraver,
+		output wire [NB_DATA-1:0]inmediate_o_paraver,
+		output wire [NB_DATA-1:0]data_a_o_paraver,
+		output wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver,
+		output wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver,
+		output wire [6-1:0]mem_signals_o_paraver,
+        output wire [4:0] wire_A_paraver,
+        output wire [1:0] mem_to_reg_signal_paraver
 	);
 
 	wire [7:0]  dout;
 	wire tx_rx;
 	wire tick;
 	wire read_rx; 
+    wire tx_done_tick;
+	wire [5 - 1:0]rx_state;
 
     wire en_pipeline;
 	wire finish_rcv; 
@@ -41,15 +56,15 @@ module pipeline
 	wire [5-1:0] wire_A_o_decode;
 	wire [5-1:0] wire_B_o_decode;
 	wire [5-1:0] wire_RW_o_decode;
-	wire [NB_DATA:0] wire_inmediate_o_decode;
-    wire [NB_OPCODE:0] opcode_o_decode;
+	wire [NB_DATA-1:0] wire_inmediate_o_decode;
+    wire [NB_OPCODE-1:0] opcode_o_decode;
     wire [5:0] funct_o_decode;
     wire [1:0]regDest_signal_decode;
     wire [NB_DATA-1:0] data_ra_o_decode;
     wire [NB_DATA-1:0] data_rb_o_decode;
-    wire [5:0]mem_signals_decode, 
-    wire [2:0]wb_signals_decode,
-    wire tipeI_signal_decode,
+    wire [5:0]mem_signals_decode;
+    wire [2:0]wb_signals_decode;
+    wire tipeI_signal_decode;
 
     //decode_execute_stage
     wire [NB_DATA-1:0] data_ra_o_execute;
@@ -74,6 +89,7 @@ module pipeline
     wire [NB_REG-1:0] writeReg_execute;
     wire [5:0] mem_signals_o_mem;
     wire [2:0] wb_signals_o_mem;
+    wire [NB_DATA-1:0] data_rb_o;
 
     // mem_wb_stage
     wire [NB_DATA-1:0] data_read_interface_o;
@@ -84,6 +100,19 @@ module pipeline
     wire [1:0] mem_to_reg_o_wb;
     wire reg_write_o_wb;
 	wire [NB_DATA-1:0] data_write_to_reg;
+
+
+	assign finish_send = tx_done_tick;
+
+    /* señales paraver */
+    assign operation_o_paraver = alu_result_execute;
+	assign inmediate_o_paraver = inmediate_o_execute;
+	assign data_a_o_paraver = data_ra_o_execute;
+    assign dataInterfaceMEM_o_paraver = data_wr_to_mem_o_mem;
+    assign dataWr_ex_mem_stage_o_paraver = data_read_interface_o;
+    assign mem_signals_o_paraver = mem_signals_o_mem;
+    assign mem_to_reg_signal_paraver = mem_to_reg_o_wb;
+    assign wire_A_paraver = wire_A_o_decode;
 
 
     wb_top wb_top
@@ -156,7 +185,7 @@ module pipeline
 		.wire_RW(wire_RW_o_execute),
         .wire_B(wire_B_o_execute),
 		.regDest_signal_i(regDest_signal_o_execute),
-		
+		.data_rb_o(data_rb_o),
 		.writeReg_o(writeReg_execute),
         .alu_result_o(alu_result_execute)
     );
@@ -225,7 +254,7 @@ module pipeline
 		.en_pipeline(en_pipeline),		
 		.pc_i(pc_fetch),
 		.pc_o(pc_decode),
-		.instruction_i(data_o),
+		.instruction_i(instruction_fetch),
 		.instruction_o(instruction_decode)	
 	);
 

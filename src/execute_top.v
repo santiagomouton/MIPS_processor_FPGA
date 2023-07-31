@@ -15,10 +15,16 @@ module execute_top
 		input wire [NB_REG-1:0]	wire_RW, wire_B,
 		input wire [2-1:0] regDest_signal_i,
 		
+		output wire [NB_DATA-1:0] data_rb_o,
 		output wire [NB_REG-1:0] writeReg_o,
         output wire [NB_DATA-1:0] alu_result_o
 	);
 	
+
+	assign data_rb_o = data_rb_i;
+
+	wire [NB_DATA-1:0] o_B_to_alu;
+	wire [6-1:0] funct_for_alu;
 
     alu alu
     (
