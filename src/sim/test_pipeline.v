@@ -18,7 +18,7 @@ module test_pipeline;
 
     reg  empty;
 
-    reg enable_i;
+    // reg enable_i;
     wire finish_send;
 
     wire [NB_DATA-1:0] operation_o_paraver;
@@ -37,16 +37,32 @@ module test_pipeline;
 
     wire [2-1:0]mem_to_reg_signal_paraver;
 
-    pipeline pipeline
+    wire [12-1:0] state_paraver;
+    wire wrote_paraver;
+
+    wire [2:0] count_paraver;
+
+    wire [NB_DATA-1:0]o_data_mem_paraver;
+
+    wire [7-1:0]o_dir_wr_mem_paraver;
+
+    wire [NB_DATA-1:0]instruction_paraver;
+
+    wire debug_out;
+    reg en_pipeline;
+
+    top_pipeline top_pipeline
     (
 		.clock(clock),
 		.reset(reset),
 		.din(din),
 		.read_tx(read_tx),
         .empty(empty),
+        //.en_pipeline(en_pipeline),
 		.en_read_i(en_read_i),
         .finish_send(finish_send),
-        .enable_i(enable_i),
+        .debug_out(debug_out),
+        // .enable_i(enable_i),
         .operation_o_paraver(operation_o_paraver),
         .inmediate_o_paraver(inmediate_o_paraver),
         .data_a_o_paraver(data_a_o_paraver),
@@ -54,7 +70,13 @@ module test_pipeline;
         .dataWr_ex_mem_stage_o_paraver(dataWr_ex_mem_stage_o_paraver),
         .mem_signals_o_paraver(mem_signals_o_paraver),
         .wire_A_paraver(wire_A_paraver),
-        .mem_to_reg_signal_paraver(mem_to_reg_signal_paraver)
+        .mem_to_reg_signal_paraver(mem_to_reg_signal_paraver),
+        .state_paraver(state_paraver),
+        .wrote_paraver(wrote_paraver),
+        .count_paraver(count_paraver),
+        .o_data_mem_paraver(o_data_mem_paraver),
+        .o_dir_wr_mem_paraver(o_dir_wr_mem_paraver),
+        .instruction_paraver(instruction_paraver)
     );
         
     initial
@@ -87,6 +109,45 @@ module test_pipeline;
             #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
             wait( finish_send == 1'b1);
+
+
+            din = 8'b00100001;
+            #PERIOD reset = 0;
+            #PERIOD empty = 0;
+            #PERIOD empty = 1;
+            wait( finish_send == 1'b1);
+            din = 8'b00011000;
+            #(PERIOD*2) empty = 0;
+            #(PERIOD*2) empty = 1;
+            wait( finish_send == 1'b1);
+            din = 8'b11100010;   //
+            #(PERIOD*2) empty = 0;
+            #(PERIOD*2) empty = 1;
+            wait( finish_send == 1'b1);
+            din = 8'b00000000; //add r2+r7=r4
+            #(PERIOD*2) empty = 0;
+            #(PERIOD*2) empty = 1;
+            wait( finish_send == 1'b1);
+
+
+            din = 8'b00100001;
+            #PERIOD reset = 0;
+            #PERIOD empty = 0;
+            #PERIOD empty = 1;
+            wait( finish_send == 1'b1);
+            din = 8'b00101000;
+            #(PERIOD*2) empty = 0;
+            #(PERIOD*2) empty = 1;
+            wait( finish_send == 1'b1);
+            din = 8'b00000110;   //
+            #(PERIOD*2) empty = 0;
+            #(PERIOD*2) empty = 1;
+            wait( finish_send == 1'b1);
+            din = 8'b00000001; //add r8+r6=r5
+            #(PERIOD*2) empty = 0;
+            #(PERIOD*2) empty = 1;
+            wait( finish_send == 1'b1);
+
 /* 
             din = 8'b00000000;
             #(PERIOD*2) empty = 0;
@@ -156,9 +217,14 @@ module test_pipeline;
             #(PERIOD*2) empty = 1;
             wait( finish_send == 1'b1);
 
+            din = 8'b00000001; // selecciono modo
+            #(PERIOD*2) empty = 0;
+            #(PERIOD*2) empty = 1;
+            wait( finish_send == 1'b1);
+
             #(PERIOD*5)
-            enable_i = 1'b1;
             en_read_i = 1'b1;
+            
 
         end
     
@@ -167,8 +233,17 @@ module test_pipeline;
         #(PERIOD/2);
     end
        
-    
-
+    /* 
+    always @(posedge clock) begin
+        if (en_pipeline == 1'b1) begin
+            en_pipeline <= 1'b0;
+            en_read_i <= 1'b0;
+        end
+        else if(en_read_i == 1'b1)begin
+            en_pipeline <= 1'b1;
+        end
+    end
+ */
 
 /*     always @(posedge tick) begin
         if(count_data == 2'b00 && start)begin

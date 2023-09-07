@@ -107,7 +107,7 @@ module top_pc_to_data_mem
     wire [5:0]mem_signals_dec_ex_stage_o;
     wire [2:0]wb_signals_dec_ex_stage_o;
 
-    //mux_write_reg
+    //multiplexor_3_in
     wire [NB_REG-1:0] writeReg_dec_ex;
 
 	//inmediate_or_dataB
@@ -170,7 +170,7 @@ module top_pc_to_data_mem
     assign wire_A_paraver = wire_A;
 
 
-    mux_wb mux_wb
+    multiplexor_4_in multiplexor_4_in
     (
 		.op1_i(mem_data_read_mem_wb_stage_o),
 		.op2_i(alu_result_mem_wb_o),
@@ -252,16 +252,15 @@ module top_pc_to_data_mem
 		.funct_for_alu(funct_for_alu)
 	);
 
-	inmediate_or_dataB inmediate_or_dataB
+	multiplexor_2_in multiplexor_2_in
 	(
-		.tipeI(tipeI_dec_ex_stage_o),
-		.inmediate(inmediate_o),
-		.dataB(data_rb_o),
-		.o_B_to_alu(o_B_to_alu)
-
+		.op1_i(data_rb_i),
+		.op2_i(inmediate_i),
+		.sel_i(tipeI_i),
+		.data_o(o_B_to_alu)		
 	);
 
-    mux_write_reg#(.NB_DATA(NB_REG)) mux_write_reg
+    multiplexor_3_in#(.NB_DATA(NB_REG)) multiplexor_3_in
     (
 		.op1_i(wire_B_dec_ex_stage_o),
 		.op2_i(wire_RW_dec_ex_stage_o),

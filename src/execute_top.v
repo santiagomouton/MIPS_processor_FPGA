@@ -41,15 +41,15 @@ module execute_top
 		.funct_for_alu(funct_for_alu)
 	);
 
-	inmediate_or_dataB inmediate_or_dataB
+	multiplexor_2_in dataRB_or_inmediate
 	(
-		.tipeI(tipeI_i),
-		.inmediate(inmediate_i),
-		.dataB(data_rb_i),
-		.o_B_to_alu(o_B_to_alu)
+		.op1_i(data_rb_i),
+		.op2_i(inmediate_i),
+		.sel_i(tipeI_i),
+		.data_o(o_B_to_alu)		
 	);
 
-    mux_write_reg#(.NB_DATA(NB_REG)) mux_write_reg
+    multiplexor_3_in#(.NB_DATA(NB_REG)) wireB_or_wireRB
     (
 		.op1_i(wire_B),
 		.op2_i(wire_RW),

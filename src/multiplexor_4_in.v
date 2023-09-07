@@ -1,14 +1,13 @@
-module mux_wb
+module multiplexor_4_in
 	#(
-		parameter NB_DATA = 32,
-		parameter NB_SEL = 2
+		parameter NB_DATA = 32
 	)
 	(
 		input wire [NB_DATA-1:0] op1_i,
 		input wire [NB_DATA-1:0] op2_i,
 		input wire [NB_DATA-1:0] op3_i,
 		input wire [NB_DATA-1:0] op4_i,
-		input wire [NB_SEL-1:0] sel_i,
+		input wire [2:0] sel_i,
 
 		output wire [NB_DATA-1:0] data_o	
 	);

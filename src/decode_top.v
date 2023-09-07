@@ -31,6 +31,8 @@ module decode_top
 		
 	);
 
+	wire [NB_REG-1:0] addr_A_out;
+
 	// Conexion distribuidor, banco de registros y control unit
 	wire [5:0]operation;
 	wire [5:0]funct;
@@ -38,8 +40,8 @@ module decode_top
 	wire branch;
 
 	//distributor
-	wire [5-1:0] wire_A;
-	wire [5-1:0] wire_B;
+	wire [NB_REG-1:0] wire_A;
+	wire [NB_REG-1:0] wire_B;
 	wire [26-1:0] wire_direction;
 	wire [16-1:0] wire_inmediate;
 
@@ -79,20 +81,20 @@ module decode_top
 		.is_equal_o(is_equal),
 		.branch_address_o(addr_branch_o)
 	);	 */
-/* 	Mux2_1 #(.NB_DATA(NB_REG)) mux_read_debug
+ 	multiplexor_2_in #(.NB_DATA(NB_REG)) addr_debug_or_wireA
 	(
-		.inA(addr_debug_unit_i),
-		.inB(instruction_i[`RS_BIT]),
-		.sel(cntl_read_debug_reg_i),
-		.out(conex_addres_reg_debug)
-	); */
+		.op1_i(wire_A),
+		.op2_i(addr_debug_i),
+		.sel_i(addr_debug_or_wireA),
+		.data_o(addr_A_out)
+	);
 
 	bank_registers bank_registers
 	(
 		.clock_i(clock_i),
 		.reset_i(reset_i),
 		.rw_i(reg_write_i), 
-		.addr_ra_i(wire_A),
+		.addr_ra_i(addr_A_out),
 		.addr_rb_i(wire_B),
 		.addr_rw_i(write_register_i),
 		.data_rw_i(data_rw_i),
