@@ -170,7 +170,7 @@ module top_pc_to_data_mem
     assign wire_A_paraver = wire_A;
 
 
-    multiplexor_4_in multiplexor_4_in
+    multiplexor_4_in src_to_write_to_reg
     (
 		.op1_i(mem_data_read_mem_wb_stage_o),
 		.op2_i(alu_result_mem_wb_o),
@@ -260,7 +260,7 @@ module top_pc_to_data_mem
 		.data_o(o_B_to_alu)		
 	);
 
-    multiplexor_3_in#(.NB_DATA(NB_REG)) multiplexor_3_in
+    multiplexor_3_in#(.NB_DATA(NB_REG)) wireB_or_wireRB
     (
 		.op1_i(wire_B_dec_ex_stage_o),
 		.op2_i(wire_RW_dec_ex_stage_o),

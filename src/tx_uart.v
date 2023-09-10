@@ -88,8 +88,9 @@ module tx_uart
          case (current_state)
             STATE_IDLE : begin
                 tx_next = 1'b1;             // bit de conexion activa
+                tx_done_tick_next = 1'b1;    
                 case(tx_start)
-                    1'b0   :
+                    1'b1   :
                     begin
                         din_next            = din;
                         count_ticks_next    = 0;

@@ -9,7 +9,9 @@ module decode_top
 		input wire clock_i,
 		input wire reset_i,    
 		//input wire enable_i,
-		input wire reg_write_i,		
+		input wire reg_write_i,
+		input wire select_debug_or_wireA,	
+		input wire [NB_REG-1:0] addr_reg_debug,	
 		
 		input wire [NB_DATA-1:0] instruction_i,		
 		input wire [NB_REG-1:0] write_register_i,
@@ -84,8 +86,8 @@ module decode_top
  	multiplexor_2_in #(.NB_DATA(NB_REG)) addr_debug_or_wireA
 	(
 		.op1_i(wire_A),
-		.op2_i(addr_debug_i),
-		.sel_i(addr_debug_or_wireA),
+		.op2_i(addr_reg_debug),
+		.sel_i(select_debug_or_wireA),
 		.data_o(addr_A_out)
 	);
 

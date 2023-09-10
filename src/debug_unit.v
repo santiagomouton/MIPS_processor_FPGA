@@ -11,6 +11,8 @@ module debug_unit
     parameter NB_STATE   = 12,
     parameter N_COUNT	 = 10,
     parameter N_REGISTER = 32,
+    parameter N_MEMORY_DATA = 127,
+    parameter NB_ADDR = 7,
     parameter RX_DATA   = 8                        // input bits rx
 ) 
 (
@@ -22,9 +24,19 @@ module debug_unit
 	output wire debug_out,
 	output reg [NB_DATA-1:0] o_data_mem,
 	output reg write_to_register,
-	output reg [6:0] o_dir_wr_mem,
+	output reg [NB_ADDR-1:0] o_dir_wr_mem,
     output reg en_pipeline_o,
 	output reg en_read_mem,
+	
+	// in/out para obtener datos de registros
+	output reg select_debug_or_wireA,
+	output reg [NB_REG-1:0] addr_reg_debug,
+	input  wire [NB_DATA-1:0] data_registers_debug,
+	// in/out para obtener datos de memoria //implementar esto de abajo
+	output reg select_debug_or_alu_result,
+	output reg [NB_ADDR-1:0] addr_mem_debug,
+	input  wire [NB_DATA-1:0] data_mem_debug,
+
 	output wire [NB_STATE-1:0] state_paraver,
 	output wire [2:0] count_paraver
 );
@@ -50,6 +62,7 @@ module debug_unit
 	// wire tick;
 	wire read_rx;
 	wire [7:0] dout;
+	wire tx_done;
 
 /*     always @(posedge clock ) begin
         if (finish_rcv)
@@ -204,14 +217,14 @@ module debug_unit
 				begin
 					if (step_mode_en)
 						begin
-							aux_step_mode ? (stop_step <= 1'b1) : (aux_step_mode <= 1'b1);
-							/* if (aux_step_mode)
+							//aux_step_mode ? (stop_step <= 1'b1) : (aux_step_mode <= 1'b1);
+							if (aux_step_mode)
 							begin
 								stop_step <= 1'b1;
 							end
 							else begin
 								aux_step_mode <= 1'b1;
-							end */
+							end
 						end		    			
 					else
 						begin
@@ -221,12 +234,24 @@ module debug_unit
 				end
 		end
 
+reg [2:0] count_send_bytes;
+reg [N_BITS-1:0] data_to_send;
+reg tx_start;
+reg	en_send_registers;
+reg	en_send_memory;
+reg	all_data_sent;
+
 	always @(posedge clock_i)
 		begin
 			if (reset_i)
 				begin
 					en_send_registers <= 1'b0;
 					en_send_memory    <= 1'b0;
+					count_send_bytes  <= 3'b000;
+					addr_reg_debug      <= 5'b0;
+					addr_mem_debug 		<= 7'b0;
+					all_data_sent 		<= 1'b0;
+					tx_start 			<= 1'b0;
 				end	
 			else
 				begin
@@ -234,16 +259,51 @@ module debug_unit
 						begin
 							if (en_send_registers)
 							begin
-								data_to_send = debug_registers[][]
-								
-								en_send_registers <= 1'b0;
-								en_send_memory <= 1'b1;
+								if (tx_done) begin
+									if (count_send_bytes == N_BYTES) begin
+										if (addr_reg_debug == N_REGISTER) begin
+											addr_reg_debug <= 5'b0;
+											en_send_registers <= 1'b0;
+											en_send_memory <= 1'b1;
+										end
+										else begin
+											addr_reg_debug <= addr_reg_debug + 1;
+										end
+									end else begin
+										data_to_send <= data_registers_debug[count_send_bytes*N_BITS+:N_BITS];
+										tx_start <= 1'b1;
+										count_send_bytes <= count_send_bytes + 1;
+									end
+								end
+								else begin
+									tx_start <= 1'b0;
+								end
+
 							end
 							else if(en_send_memory) begin
-								en_send_memory <= 1'b0;
+								if (tx_done) begin
+									if (count_send_bytes == N_BYTES) begin
+										if (addr_mem_debug == N_MEMORY_DATA) begin
+											addr_mem_debug <= 5'b0;
+											en_send_memory 	  <= 1'b0;
+											all_data_sent <= 1'b1;
+										end
+										else begin
+											addr_mem_debug <= addr_mem_debug + 1;
+										end
+									end else begin
+										data_to_send <= data_mem_debug[count_send_bytes*N_BITS+:N_BITS];
+										tx_start <= 1'b1;
+										count_send_bytes <= count_send_bytes + 1;
+									end
+								end
+								else begin
+									tx_start <= 1'b0;
+								end
+
 							end
 							else begin
-								
+								tx_start <= 1'b0;
 								en_send_registers <= 1'b1;
 							end
 						end		    			
@@ -251,6 +311,10 @@ module debug_unit
 						begin
 							en_send_registers <= 1'b0;
 							en_send_memory    <= 1'b0;
+							addr_reg_debug    <= 5'b0;
+							addr_mem_debug 	  <= 5'b0;
+							all_data_sent 	  <= 1'b0;
+							tx_start 		  <= 1'b0;
 						end	  
 				end
 		end
@@ -269,6 +333,9 @@ module debug_unit
 			en_read_mem = 1'b0;
 			step_mode_en = 1'b0;
 			en_send_data_pc = 1'b0;
+
+			select_debug_or_wireA = 1'b0;
+			select_debug_or_alu_result = 1'b0;
 
 			case (state)
 				Iddle:
@@ -351,10 +418,14 @@ module debug_unit
 					end	
 				Sending_data_pc:
 					begin				
-						en_pipeline_reg = 1'b0;
+						// en_pipeline_reg = 1'b0;
 						en_read_mem = 1'b0;
 						en_send_data_pc = 1'b1;
-						if (conditions) begin
+
+						select_debug_or_wireA = 1'b1;
+						select_debug_or_alu_result = 1'b1;
+
+						if (all_data_sent) begin
 							next_state = Wait_mode;
 						end else begin
 							next_state = Sending_data_pc;
@@ -373,8 +444,8 @@ module debug_unit
         .s_tick(tick), 
         .tx(debug_out),							// bit salida hacia rx
         .read_tx(read_tx),					// habilitado para leer
-        .tx_done_tick(),                                     // 1 cuando termino de enviar
-        .tx_Step_mode(),												// 1 cuando comienza a transmitir
+        .tx_done_tick(tx_done),                                     // 1 cuando termino de enviar o no esta enviando
+        .tx_start(tx_start),												// 1 cuando comienza a transmitir
         .din(data_to_send),						
         .clock(clock_i),
         .reset(reset_i)

@@ -17,7 +17,7 @@ module top_pipeline
 		input wire clock,
 		input wire reset,		
 		// input wire enable_i,
-		input wire en_read_i,
+		// input wire en_read_i,
         input wire [N_BITS - 1:0] din,
         input wire read_tx,
         input wire empty,
@@ -109,6 +109,18 @@ module top_pipeline
     wire reg_write_o_wb;
 	wire [NB_DATA-1:0] data_write_to_reg;
 
+    // debug_unit
+    wire select_debug_or_wireA;
+    wire [NB_REG-1:0] addr_reg_debug;
+    wire [NB_DATA-1:0] data_registers_debug;
+    wire [7-1:0] addr_mem_debug;
+	wire select_debug_or_alu_result;
+	wire [NB_DATA-1:0] data_mem_debug;
+
+    wire en_read_i;
+
+    assign data_ra_o_decode = data_registers_debug;
+    assign data_mem_debug = data_read_interface_o;
 
 	assign finish_send = tx_done_tick;
 
@@ -159,6 +171,8 @@ module top_pipeline
 		.reset_i(reset),
 		.en_pipeline(en_pipeline),
 		.alu_result_i(alu_result_o_mem[6:0]),
+		.addr_mem_debug(addr_mem_debug),
+		.select_debug_or_alu_result(select_debug_or_alu_result),
 		.data_wr_to_mem(data_wr_to_mem_o_mem),
 		.mem_signals_i(mem_signals_o_mem),
 		.data_read_interface_o(data_read_interface_o)
@@ -240,6 +254,8 @@ module top_pipeline
 		.reset_i(reset),    
 		//.enable_i,
 		.reg_write_i(reg_write_o_wb),		
+		.select_debug_or_wireA(select_debug_or_wireA),
+		.addr_reg_debug(addr_reg_debug),
 		.instruction_i(instruction_decode),		
 		.write_register_i(writeReg_wb),
 		.data_rw_i(data_write_to_reg),
@@ -287,6 +303,13 @@ module top_pipeline
         .reset_i(reset),
         .tick(tick),
 	    .tx_rx(tx_rx),
+	    .select_debug_or_wireA(select_debug_or_wireA),
+	    .addr_reg_debug(addr_reg_debug),
+	    .data_registers_debug(data_registers_debug),
+
+        .addr_mem_debug(addr_mem_debug),
+	    .select_debug_or_alu_result(select_debug_or_alu_result),
+	    .data_mem_debug(data_mem_debug),
     
         .state_paraver(state_paraver),
         .count_paraver(count_paraver),
@@ -296,7 +319,7 @@ module top_pipeline
 	    .write_to_register(ready_data_mem),
 	    .o_dir_wr_mem(o_dir_mem_write),
         .en_pipeline_o(en_pipeline),
-        .en_read_mem(en_read_i_kk)
+        .en_read_mem(en_read_i)
 	);
 
     // ______________________ BRG ____________ //

@@ -14,7 +14,7 @@ module test_pipeline;
 
     reg  [N_DATA - 1:0] din;
     wire read_tx;
-    reg en_read_i;
+    // reg en_read_i;
 
     reg  empty;
 
@@ -59,7 +59,7 @@ module test_pipeline;
 		.read_tx(read_tx),
         .empty(empty),
         //.en_pipeline(en_pipeline),
-		.en_read_i(en_read_i),
+		// .en_read_i(en_read_i),
         .finish_send(finish_send),
         .debug_out(debug_out),
         // .enable_i(enable_i),
@@ -94,58 +94,58 @@ module test_pipeline;
             reset       = 1;
             din = 8'b00000000;
             #PERIOD reset = 0;
-            #PERIOD empty = 0;
             #PERIOD empty = 1;
+            #PERIOD empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000000;
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00100011;   //load en el registro 3
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b10000000; //lb   (registro1+0)
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
 
 
             din = 8'b00100001;
             #PERIOD reset = 0;
-            #PERIOD empty = 0;
             #PERIOD empty = 1;
+            #PERIOD empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00011000;
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11100010;   //
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000000; //add r2+r7=r4
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
 
 
             din = 8'b00100001;
             #PERIOD reset = 0;
-            #PERIOD empty = 0;
             #PERIOD empty = 1;
+            #PERIOD empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00101000;
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000110;   //
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000001; //add r8+r6=r5
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
 
 /* 
@@ -201,29 +201,35 @@ module test_pipeline;
             wait( finish_send == 1'b1); */
 
             din = 8'b11111111;
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11111111;
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11111111;
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11111111;
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
 
             din = 8'b00000001; // selecciono modo
-            #(PERIOD*2) empty = 0;
             #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
+            wait( state_paraver == 12'b000000001000);
+
+
+            din = 8'b00000001; // selecciono modo
+            #(PERIOD*2) empty = 1;
+            #(PERIOD*2) empty = 0;
             wait( finish_send == 1'b1);
 
-            #(PERIOD*5)
-            en_read_i = 1'b1;
+            // #(PERIOD*5)
+            // en_read_i = 1'b1;
             
 
         end
