@@ -27,6 +27,9 @@ module debug_unit
 	output reg [NB_ADDR-1:0] o_dir_wr_mem,
     output reg en_pipeline_o,
 	output reg en_read_mem,
+
+
+	output wire [N_BITS-1:0] data_to_send_paraver,
 	
 	// in/out para obtener datos de registros
 	output reg select_debug_or_wireA,
@@ -38,7 +41,10 @@ module debug_unit
 	input  wire [NB_DATA-1:0] data_mem_debug,
 
 	output wire [NB_STATE-1:0] state_paraver,
-	output wire [2:0] count_paraver
+	output wire [2:0] count_paraver,
+	output wire en_send_registers_paraver,
+	output wire tx_done_paraver,
+	output wire [2:0] count_send_bytes_paraver
 );
 
     reg en_pipeline_reg;
@@ -241,6 +247,11 @@ reg	en_send_registers;
 reg	en_send_memory;
 reg	all_data_sent;
 
+assign data_to_send_paraver = data_to_send;
+assign en_send_registers_paraver = en_send_memory;
+assign tx_done_paraver = tx_done;
+assign count_send_bytes_paraver = count_send_bytes;
+
 	always @(posedge clock_i)
 		begin
 			if (reset_i)
@@ -261,7 +272,8 @@ reg	all_data_sent;
 							begin
 								if (tx_done) begin
 									if (count_send_bytes == N_BYTES) begin
-										if (addr_reg_debug == N_REGISTER) begin
+										count_send_bytes <= 3'b000;
+										if (addr_reg_debug == N_REGISTER-1) begin
 											addr_reg_debug <= 5'b0;
 											en_send_registers <= 1'b0;
 											en_send_memory <= 1'b1;
@@ -283,8 +295,9 @@ reg	all_data_sent;
 							else if(en_send_memory) begin
 								if (tx_done) begin
 									if (count_send_bytes == N_BYTES) begin
-										if (addr_mem_debug == N_MEMORY_DATA) begin
-											addr_mem_debug <= 5'b0;
+										count_send_bytes  <= 3'b000;
+										if (addr_mem_debug == N_MEMORY_DATA-1) begin
+											addr_mem_debug <= 7'b0;
 											en_send_memory 	  <= 1'b0;
 											all_data_sent <= 1'b1;
 										end
@@ -312,9 +325,10 @@ reg	all_data_sent;
 							en_send_registers <= 1'b0;
 							en_send_memory    <= 1'b0;
 							addr_reg_debug    <= 5'b0;
-							addr_mem_debug 	  <= 5'b0;
+							addr_mem_debug 	  <= 7'b0;
 							all_data_sent 	  <= 1'b0;
 							tx_start 		  <= 1'b0;
+							count_send_bytes  <= 3'b000;
 						end	  
 				end
 		end
@@ -361,8 +375,7 @@ reg	all_data_sent;
 					end				
 				Write_Instruction:					
 					begin
-						rcv_instr_complete = 0;
-						//$display("Sending inst");						
+						rcv_instr_complete = 0;					
 						if (wrote)
 							begin
 								o_dir_wr_mem_next = o_dir_wr_mem + 1;

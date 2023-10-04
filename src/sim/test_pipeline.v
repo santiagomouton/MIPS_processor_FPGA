@@ -27,15 +27,15 @@ module test_pipeline;
 
     wire [NB_DATA-1:0]data_a_o_paraver;
 
-    wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver;
+    // wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver;
 
-    wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver;
+    // wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver;
 
-    wire [6-1:0]mem_signals_o_paraver;
+    // wire [6-1:0]mem_signals_o_paraver;
 
     wire [5-1:0]wire_A_paraver;
 
-    wire [2-1:0]mem_to_reg_signal_paraver;
+    // wire [2-1:0]mem_to_reg_signal_paraver;
 
     wire [12-1:0] state_paraver;
     wire wrote_paraver;
@@ -49,7 +49,15 @@ module test_pipeline;
     wire [NB_DATA-1:0]instruction_paraver;
 
     wire debug_out;
-    reg en_pipeline;
+
+    wire [8-1:0] data_to_send_paraver;
+    wire en_send_registers_paraver;
+    wire select_debug_or_wireA_paraver;
+    wire [7-1:0] addr_mem_debug_paraver;
+    wire tx_done_paraver;
+    wire [2:0] count_send_bytes_paraver;
+    // reg en_pipeline;
+    wire en_pipeline_paraver;
 
     top_pipeline top_pipeline
     (
@@ -66,17 +74,24 @@ module test_pipeline;
         .operation_o_paraver(operation_o_paraver),
         .inmediate_o_paraver(inmediate_o_paraver),
         .data_a_o_paraver(data_a_o_paraver),
-        .dataInterfaceMEM_o_paraver(dataInterfaceMEM_o_paraver),
-        .dataWr_ex_mem_stage_o_paraver(dataWr_ex_mem_stage_o_paraver),
-        .mem_signals_o_paraver(mem_signals_o_paraver),
+        // .dataInterfaceMEM_o_paraver(dataInterfaceMEM_o_paraver),
+        // .dataWr_ex_mem_stage_o_paraver(dataWr_ex_mem_stage_o_paraver),
+        // .mem_signals_o_paraver(mem_signals_o_paraver),
         .wire_A_paraver(wire_A_paraver),
-        .mem_to_reg_signal_paraver(mem_to_reg_signal_paraver),
+        // .mem_to_reg_signal_paraver(mem_to_reg_signal_paraver),
         .state_paraver(state_paraver),
         .wrote_paraver(wrote_paraver),
         .count_paraver(count_paraver),
         .o_data_mem_paraver(o_data_mem_paraver),
         .o_dir_wr_mem_paraver(o_dir_wr_mem_paraver),
-        .instruction_paraver(instruction_paraver)
+        .instruction_paraver(instruction_paraver),
+        .data_to_send_paraver(data_to_send_paraver),
+        .en_send_registers_paraver(en_send_registers_paraver),
+        .select_debug_or_wireA_paraver(select_debug_or_wireA_paraver),
+        .addr_mem_debug_paraver(addr_mem_debug_paraver),
+        .tx_done_paraver(tx_done_paraver),
+        .count_send_bytes_paraver(count_send_bytes_paraver),
+        .en_pipeline_paraver(en_pipeline_paraver)
     );
         
     initial
@@ -94,138 +109,138 @@ module test_pipeline;
             reset       = 1;
             din = 8'b00000000;
             #PERIOD reset = 0;
-            #PERIOD empty = 1;
-            #PERIOD empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000000;
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00100011;   //load en el registro 3
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b10000000; //lb   (registro1+0)
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
 
 
             din = 8'b00100001;
-            #PERIOD reset = 0;
-            #PERIOD empty = 1;
-            #PERIOD empty = 0;
+            // #PERIOD reset = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00011000;
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11100010;   //
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000000; //add r2+r7=r4
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
 
 
             din = 8'b00100001;
-            #PERIOD reset = 0;
-            #PERIOD empty = 1;
-            #PERIOD empty = 0;
+            // #PERIOD reset = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00101000;
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000110;   //
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b00000001; //add r8+r6=r5
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
 
 /* 
             din = 8'b00000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b00000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b00100100;   //load en el registro 4
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b10000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
 
             din = 8'b00000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b00000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b00100101;   //load en el registro 5
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b10000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
 
             din = 8'b00000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b00000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b00100101;   //add en el registro 6
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1);
             din = 8'b10000000;
-            #(PERIOD*2) empty = 0;
-            #(PERIOD*2) empty = 1;
+            #(PERIOD*4) empty = 0;
+            #(PERIOD*4) empty = 1;
             wait( finish_send == 1'b1); */
 
             din = 8'b11111111;
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11111111;
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11111111;
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
             din = 8'b11111111;
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
 
             din = 8'b00000001; // selecciono modo
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( state_paraver == 12'b000000001000);
 
 
             din = 8'b00000001; // selecciono modo
-            #(PERIOD*2) empty = 1;
-            #(PERIOD*2) empty = 0;
+            #(PERIOD*4) empty = 1;
+            #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
 
             // #(PERIOD*5)
@@ -262,7 +277,7 @@ module test_pipeline;
     end
     
     always @(posedge tx_done_tick) begin
-        #(PERIOD*2);
+        #(PERIOD*4);
         if (count_data <= 2'b10) begin
             o_tx    <= 8'b00100000;
             empty   <= 0;

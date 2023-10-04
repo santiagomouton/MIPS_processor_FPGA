@@ -61,7 +61,7 @@ module tx_uart
                 din_reg             <= 0; 
                 count_data_reg      <= 0;
                 count_ticks_reg     <= 0;
-                tx_done_tick_reg    <= 0;
+                // tx_done_tick_reg    <= 0;
                 tx_reg              <= 1'b1;
                 read_tx_reg         <= 0;
                 current_state       <= STATE_IDLE; 
@@ -70,7 +70,7 @@ module tx_uart
                 din_reg          <= din_next; 
                 count_data_reg   <= count_data_next;
                 count_ticks_reg  <= count_ticks_next;
-                tx_done_tick_reg <= tx_done_tick_next;
+                // tx_done_tick_reg <= tx_done_tick_next;
                 tx_reg           <= tx_next;
                 read_tx_reg      <= read_tx_next;
                 current_state    <= next_state;
@@ -82,22 +82,31 @@ module tx_uart
          count_data_next    = count_data_reg;
          count_ticks_next   = count_ticks_reg;
          tx_done_tick_next  = 0;
+
+         tx_done_tick_reg  = 0;
+         
          tx_next            = tx_reg;
          din_next           = din_reg;
          read_tx_next       = 0;
          case (current_state)
             STATE_IDLE : begin
                 tx_next = 1'b1;             // bit de conexion activa
-                tx_done_tick_next = 1'b1;    
                 case(tx_start)
                     1'b1   :
                     begin
                         din_next            = din;
                         count_ticks_next    = 0;
                         read_tx_next        = 1;
+                        // tx_done_tick_next   = 0;
+                        tx_done_tick_reg   = 0;
                         next_state          = STATE_START;
                     end
-                    default: next_state = STATE_IDLE;
+                    default:
+                    begin
+                        next_state = STATE_IDLE;
+                        // tx_done_tick_next = 1'b1;
+                        tx_done_tick_reg = 1'b1;
+                    end    
                 endcase
             end
             // -------------------------------------------------------------------------- //
@@ -164,7 +173,8 @@ module tx_uart
                     DATA_TICKS:     
                     begin
                         count_ticks_next     = 0;  
-                        tx_done_tick_next    = 1'b1;    
+                        // tx_done_tick_next    = 1'b1;    
+                        tx_done_tick_reg    = 1'b1;    
                         next_state = STATE_IDLE;
                     end
                     default: begin

@@ -11,7 +11,8 @@ module top_pipeline
 		parameter NB_WB_CTRL  = 3,
 		parameter N_REGISTER = 32,
 		parameter N_BYTES    = 4,
-		parameter N_BITS = 8		
+		parameter N_BITS = 8,
+        parameter NB_ADDR = 7		
 	)
 	(
 		input wire clock,
@@ -28,18 +29,25 @@ module top_pipeline
 
 		output wire [NB_DATA-1:0]operation_o_paraver,
 		output wire [NB_DATA-1:0]inmediate_o_paraver,
-		output wire [NB_DATA-1:0]data_a_o_paraver,
-		output wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver,
-		output wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver,
-		output wire [6-1:0]mem_signals_o_paraver,
         output wire [4:0] wire_A_paraver,
-        output wire [1:0] mem_to_reg_signal_paraver,
+        output wire en_pipeline_paraver,
+		// output wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver,
+		// output wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver,
+		// output wire [6-1:0]mem_signals_o_paraver,
+        // output wire [1:0] mem_to_reg_signal_paraver,
         output wire [12-1:0] state_paraver,
+		output wire [NB_DATA-1:0]data_a_o_paraver,
         output wire wrote_paraver,
         output wire [2:0] count_paraver,
-        output wire [NB_DATA-1:0]o_data_mem_paraver,
         output wire [7-1:0]o_dir_wr_mem_paraver,
-        output wire [NB_DATA-1:0]instruction_paraver
+        output wire [NB_DATA-1:0]instruction_paraver,
+        output wire [N_BITS-1:0] data_to_send_paraver,
+        output wire en_send_registers_paraver,
+        output wire select_debug_or_wireA_paraver,
+        output wire [NB_ADDR-1:0] addr_mem_debug_paraver,
+        output wire tx_done_paraver,
+        output wire [2:0] count_send_bytes_paraver,
+        output wire [NB_DATA-1:0]o_data_mem_paraver
 	);
 
 	wire [7:0]  dout;
@@ -119,7 +127,7 @@ module top_pipeline
 
     wire en_read_i;
 
-    assign data_ra_o_decode = data_registers_debug;
+    assign data_registers_debug = data_ra_o_decode;
     assign data_mem_debug = data_read_interface_o;
 
 	assign finish_send = tx_done_tick;
@@ -128,13 +136,16 @@ module top_pipeline
     assign operation_o_paraver = alu_result_execute;
 	assign inmediate_o_paraver = inmediate_o_execute;
 	assign data_a_o_paraver = data_ra_o_execute;
-    assign dataInterfaceMEM_o_paraver = data_wr_to_mem_o_mem;
-    assign dataWr_ex_mem_stage_o_paraver = data_read_interface_o;
-    assign mem_signals_o_paraver = mem_signals_o_mem;
-    assign mem_to_reg_signal_paraver = mem_to_reg_o_wb;
+    // assign dataInterfaceMEM_o_paraver = data_wr_to_mem_o_mem;
+    // assign dataWr_ex_mem_stage_o_paraver = data_read_interface_o;
+    // assign mem_signals_o_paraver = mem_signals_o_mem;
+    // assign mem_to_reg_signal_paraver = mem_to_reg_o_wb;
     assign wire_A_paraver = wire_A_o_decode;
     assign instruction_paraver = instruction_fetch;
     assign wrote_paraver = ready_data_mem;
+    assign select_debug_or_wireA_paraver = select_debug_or_wireA;
+    assign addr_mem_debug_paraver = addr_mem_debug;
+    assign en_pipeline_paraver = en_pipeline;
 
 
     wb_top wb_top
@@ -313,8 +324,12 @@ module top_pipeline
     
         .state_paraver(state_paraver),
         .count_paraver(count_paraver),
+        .data_to_send_paraver(data_to_send_paraver), 
+        .en_send_registers_paraver(en_send_registers_paraver), 
+        .tx_done_paraver(tx_done_paraver), 
+        .count_send_bytes_paraver(count_send_bytes_paraver), 
 
-        .debug_out(debug_out),
+        .debug_out(debug_out), 
 	    .o_data_mem(o_data_mem),
 	    .write_to_register(ready_data_mem),
 	    .o_dir_wr_mem(o_dir_mem_write),

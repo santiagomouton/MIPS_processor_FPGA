@@ -15,7 +15,7 @@ module wb_top
 	);
 
 
-    mux_wb mux_wb
+    multiplexor_4_in mux_wb
     (
 		.op1_i(mem_data_i),
 		.op2_i(alu_result_i),

@@ -1,7 +1,4 @@
 
-`define MEM_READ 5
-`define MEM_WRITE 4
-
 module mem_top
 	#(
 		parameter NB_DATA = 32,
@@ -26,20 +23,20 @@ module mem_top
 	wire [6-1:0] mem_signals;
 
 
-	multiplexor_2_in #(.NB_DATA(NB_ADDR)) mem_addr_alu_or_debug
+	multiplexor_2_in#(.NB_DATA(NB_ADDR)) mem_addr_alu_or_debug
 	(
-		op1_i(alu_result_i),
-		op2_i(addr_mem_debug),
-		sel_i(select_debug_or_alu_result),
-		data_o(addr_mem)	
+		.op1_i(alu_result_i),
+		.op2_i(addr_mem_debug),
+		.sel_i(select_debug_or_alu_result),
+		.data_o(addr_mem)	
 	);
 
-	multiplexor_2_in #(.NB_DATA(6)) mem_signals_debug_or_not
+	multiplexor_2_in#(.NB_DATA(6)) mem_signals_debug_or_not
 	(
-		op1_i(mem_signals_i),
-		op2_i(6'b110100),
-		sel_i(select_debug_or_alu_result),
-		data_o(mem_signals)	
+		.op1_i(mem_signals_i),
+		.op2_i(6'b110100),
+		.sel_i(select_debug_or_alu_result),
+		.data_o(mem_signals)	
 	);
 
     DATAmem DATAmem

@@ -7,7 +7,7 @@ module multiplexor_4_in
 		input wire [NB_DATA-1:0] op2_i,
 		input wire [NB_DATA-1:0] op3_i,
 		input wire [NB_DATA-1:0] op4_i,
-		input wire [2:0] sel_i,
+		input wire [1:0] sel_i,
 
 		output wire [NB_DATA-1:0] data_o	
 	);
