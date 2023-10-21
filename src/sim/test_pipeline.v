@@ -34,15 +34,16 @@ module test_pipeline;
     // wire [6-1:0]mem_signals_o_paraver;
 
     wire [5-1:0]wire_A_paraver;
+    wire [5-1:0]wire_B_paraver;
 
     // wire [2-1:0]mem_to_reg_signal_paraver;
 
     wire [12-1:0] state_paraver;
     wire wrote_paraver;
 
-    wire [2:0] count_paraver;
+    // wire [2:0] count_paraver;
 
-    wire [NB_DATA-1:0]o_data_mem_paraver;
+    // wire [NB_DATA-1:0]o_data_mem_paraver;
 
     wire [7-1:0]o_dir_wr_mem_paraver;
 
@@ -51,13 +52,16 @@ module test_pipeline;
     wire debug_out;
 
     wire [8-1:0] data_to_send_paraver;
-    wire en_send_registers_paraver;
-    wire select_debug_or_wireA_paraver;
+    // wire en_send_registers_paraver;
+    // wire select_debug_or_wireA_paraver;
     wire [7-1:0] addr_mem_debug_paraver;
-    wire tx_done_paraver;
-    wire [2:0] count_send_bytes_paraver;
+    // wire tx_done_paraver;
+    // wire [2:0] count_send_bytes_paraver;
     // reg en_pipeline;
     wire en_pipeline_paraver;
+
+    wire [NB_DATA-1:0] o_B_to_alu_paraver;
+    wire [6-1:0] funct_for_alu_paraver;
 
     top_pipeline top_pipeline
     (
@@ -71,27 +75,30 @@ module test_pipeline;
         .finish_send(finish_send),
         .debug_out(debug_out),
         // .enable_i(enable_i),
-        .operation_o_paraver(operation_o_paraver),
+        .instruction_paraver(instruction_paraver),
+        .wire_A_paraver(wire_A_paraver),
+        .wire_B_paraver(wire_B_paraver),
         .inmediate_o_paraver(inmediate_o_paraver),
+        .en_pipeline_paraver(en_pipeline_paraver),
+        .operation_o_paraver(operation_o_paraver),
+        .state_paraver(state_paraver),
         .data_a_o_paraver(data_a_o_paraver),
         // .dataInterfaceMEM_o_paraver(dataInterfaceMEM_o_paraver),
         // .dataWr_ex_mem_stage_o_paraver(dataWr_ex_mem_stage_o_paraver),
         // .mem_signals_o_paraver(mem_signals_o_paraver),
-        .wire_A_paraver(wire_A_paraver),
         // .mem_to_reg_signal_paraver(mem_to_reg_signal_paraver),
-        .state_paraver(state_paraver),
         .wrote_paraver(wrote_paraver),
-        .count_paraver(count_paraver),
-        .o_data_mem_paraver(o_data_mem_paraver),
-        .o_dir_wr_mem_paraver(o_dir_wr_mem_paraver),
-        .instruction_paraver(instruction_paraver),
-        .data_to_send_paraver(data_to_send_paraver),
-        .en_send_registers_paraver(en_send_registers_paraver),
-        .select_debug_or_wireA_paraver(select_debug_or_wireA_paraver),
+        // .count_paraver(count_paraver),
+        // .o_data_mem_paraver(o_data_mem_paraver),
         .addr_mem_debug_paraver(addr_mem_debug_paraver),
-        .tx_done_paraver(tx_done_paraver),
-        .count_send_bytes_paraver(count_send_bytes_paraver),
-        .en_pipeline_paraver(en_pipeline_paraver)
+        .o_dir_wr_mem_paraver(o_dir_wr_mem_paraver),
+        .data_to_send_paraver(data_to_send_paraver),
+        .o_B_to_alu_paraver(o_B_to_alu_paraver),
+        .funct_for_alu_paraver(funct_for_alu_paraver)
+        // .en_send_registers_paraver(en_send_registers_paraver),
+        // .select_debug_or_wireA_paraver(select_debug_or_wireA_paraver),
+        // .tx_done_paraver(tx_done_paraver),
+        // .count_send_bytes_paraver(count_send_bytes_paraver),
     );
         
     initial
@@ -126,7 +133,7 @@ module test_pipeline;
             wait( finish_send == 1'b1);
 
 
-            din = 8'b00100001;
+            din = 8'b00100000;
             // #PERIOD reset = 0;
             #(PERIOD*4) empty = 1;
             #(PERIOD*4) empty = 0;
@@ -145,7 +152,7 @@ module test_pipeline;
             wait( finish_send == 1'b1);
 
 
-            din = 8'b00100001;
+            din = 8'b00100000;
             // #PERIOD reset = 0;
             #(PERIOD*4) empty = 1;
             #(PERIOD*4) empty = 0;
@@ -235,12 +242,15 @@ module test_pipeline;
             din = 8'b00000001; // selecciono modo
             #(PERIOD*4) empty = 1;
             #(PERIOD*4) empty = 0;
-            wait( state_paraver == 12'b000000001000);
+            // $display("El número es: %d", 1.5*1000000000000);
+            // #(1.5*1000000000000);
+            // wait( state_paraver == 12'b000000001000);
+            #(PERIOD*4);
 
 
             din = 8'b00000001; // selecciono modo
             #(PERIOD*4) empty = 1;
-            #(PERIOD*4) empty = 0;
+            // #(PERIOD*4) empty = 0;
             wait( finish_send == 1'b1);
 
             // #(PERIOD*5)

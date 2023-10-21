@@ -77,7 +77,7 @@ module ex_mem_stage
 	assign pc_o    = pc_reg;
 	assign data_wr_to_mem_o = data_wr_to_mem_reg;
 	assign alu_result_o = alu_result_reg;
-	assign writeReg_i = writeReg_reg;
+	assign writeReg_o = writeReg_reg;
     assign mem_signals_o = mem_signals_reg;
     assign wb_signals_o = wb_signals_reg;
 

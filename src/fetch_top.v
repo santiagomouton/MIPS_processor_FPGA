@@ -33,7 +33,7 @@ module fetch_top
 		.clock(clock_i),
 		.reset(reset_i),
 		.enable(enable_i),				
-		.next_addr_i(next_addr_plus_four_o), //por ahora para que solo lea la primera instruccion
+		.next_addr_i(next_addr_plus_four_o), 
 		.next_addr_o(next_addr_o),
 		.next_addr_plus_four_o(next_addr_plus_four_o)
 	);

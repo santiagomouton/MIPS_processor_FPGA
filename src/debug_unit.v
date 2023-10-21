@@ -224,13 +224,13 @@ module debug_unit
 					if (step_mode_en)
 						begin
 							//aux_step_mode ? (stop_step <= 1'b1) : (aux_step_mode <= 1'b1);
-							if (aux_step_mode)
-							begin
+							// if (aux_step_mode)
+							// begin
 								stop_step <= 1'b1;
-							end
-							else begin
-								aux_step_mode <= 1'b1;
-							end
+							// end
+							// else begin
+							// 	aux_step_mode <= 1'b1;
+							// end
 						end		    			
 					else
 						begin
@@ -409,13 +409,14 @@ assign count_send_bytes_paraver = count_send_bytes;
 					end
 				Step_mode:
 					begin						
-						en_pipeline_reg = 1'b1;
 						en_read_mem = 1'b1;
 						step_mode_en = 1'b1;
-						if (stop_step) begin			
+						if (stop_step) begin
+							en_pipeline_reg = 1'b0;		
 							next_state = Sending_data_pc;		
 						end
 						else begin
+							en_pipeline_reg = 1'b1;
 							next_state = Step_mode;		
 						end
 					end	
