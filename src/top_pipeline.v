@@ -133,6 +133,15 @@ module top_pipeline
     wire [1:0] forward_signal_regA;
     wire [1:0] forward_signal_regB;
 
+    // hazard_unit
+    wire stall;
+    wire pc_write_o;
+    wire if_dec_write_o;
+
+    // decode_forward
+    wire decode_forward_A;
+    wire decode_forward_B;
+
     wire en_read_i;
 
     assign data_registers_debug = data_ra_o_decode;
@@ -157,9 +166,35 @@ module top_pipeline
     assign en_pipeline_paraver = en_pipeline;
 
 
+    decode_forward decode_forward
+    (
+        .wire_A_dec(wire_A_o_decode),
+		.wire_B_dec(wire_B_o_decode),
+		.writeReg(writeReg_o_mem),
+		.ex_mem_reg_write(wb_signals_o_mem[2]),	
+
+		.decode_forward_A(decode_forward_A), 
+        .decode_forward_B(decode_forward_B)        
+    );
+
     hazard_unit hazard_unit
     (
-        
+		.dec_ex_mem_read(mem_signals_o_execute[6]),
+		.wire_A_decode(wire_A_o_decode),
+		.wire_B_decode(wire_B_o_decode),
+		.dec_ex_register_b(wire_B_o_execute),
+		// .[NB_REG-1:0] writeReg_execute,
+
+		//.[NB_OPCODE-1:0] op_code_i,
+		.EX_reg_write_i(), //vacio por ahora
+		//.beq_i, bne_i,
+		.EX_write_register_i(), //vacio por ahora
+		.halt_i(),
+
+        stall_o(stall),
+		pc_write_o(pc_write_o), //detiene cargar la sig direccion
+		if_dec_write_o(if_dec_write_o) //detiene cargar la instruccion en el registro IF_ID
+
     );
 
     forward_unit forward_unit
@@ -297,7 +332,8 @@ module top_pipeline
     decode_top decode_top
     (
 		.clock_i(clock),
-		.reset_i(reset),    
+		.reset_i(reset),
+        .pc_decode(pc_decode), 
 		//.enable_i,
 		.reg_write_i(reg_write_o_wb),		
 		.select_debug_or_wireA(select_debug_or_wireA),
@@ -305,15 +341,25 @@ module top_pipeline
 		.instruction_i(instruction_decode),		
 		.write_register_i(writeReg_o_wb),
 		.data_rw_i(data_write_to_reg),
+
+        .stall(stall), //
+
 		// output wire [NB_REG-1:0] shamt_o,
 		.wireA_o(wire_A_o_decode), 
         .wireB_o(wire_B_o_decode),
         .wireRW_o(wire_RW_o_decode),
-        .wire_inmediate_o(wire_inmediate_o_decode),
+        .wire_inmediate_sign_o(wire_inmediate_o_decode),
 		.mem_signals(mem_signals_decode), 
 		.wb_signals(wb_signals_decode),
         .regDest_signal(regDest_signal_decode),
         .tipeI_signal(tipeI_signal_decode),
+
+        .decode_forward_A(decode_forward_A), 
+        .decode_forward_B(decode_forward_B),
+        .alu_result(alu_result_o_mem),
+
+        .shamt_signal(), // vacio por ahora
+        
         .opcode_o(opcode_o_decode),
         .funct_o(funct_o_decode),
         .data_ra_o(data_ra_o_decode),
@@ -323,7 +369,7 @@ module top_pipeline
 	fetch_decode_stage fetch_decode_stage
 	(
 		.clock_i(clock),  
-		.en_pipeline(en_pipeline),		
+		.en_pipeline(en_pipeline && if_dec_write_o),		
 		.pc_i(pc_fetch),
 		.pc_o(pc_decode),
 		.instruction_i(instruction_fetch),
@@ -334,7 +380,7 @@ module top_pipeline
 	(
 		.clock_i(clock),
 		.reset_i(reset),		
-		.enable_i(en_pipeline),
+		.enable_i(en_pipeline && pc_write_o),
 		.en_read_i(en_read_i), 
 		.en_write_i(ready_data_mem),
         .addr_i_write(o_dir_mem_write),

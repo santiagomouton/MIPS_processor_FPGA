@@ -7,7 +7,8 @@ module decode_top
 	)
 	(
 		input wire clock_i,
-		input wire reset_i,    
+		input wire reset_i,
+		input wire [7-1:0] pc_decode,
 		//input wire enable_i,
 		input wire reg_write_i,
 		input wire select_debug_or_wireA,	
@@ -17,6 +18,12 @@ module decode_top
 		input wire [NB_REG-1:0] write_register_i,
 		input wire [NB_DATA-1:0] data_rw_i,
 
+		input wire decode_forward_A, 
+        input wire decode_forward_B,
+		input wire [NB_DATA-1:0] alu_result,
+
+		input wire stall,
+
 		// output wire [NB_REG-1:0] shamt_o,
 		output wire [NB_REG-1:0] wireA_o, wireB_o, wireRW_o,
 
@@ -24,13 +31,16 @@ module decode_top
 		output wire [2:0]wb_signals,
         output wire [1:0]regDest_signal,
         output wire tipeI_signal,
+        output wire shamt_signal,
 
         output wire [NB_OPCODE-1:0] opcode_o,
         output wire [5:0] funct_o,
-        output wire [NB_DATA-1:0] wire_inmediate_o,
+        output wire [NB_DATA-1:0] wire_inmediate_sign_o,
         output wire [NB_DATA-1:0] data_ra_o,
-        output wire [NB_DATA-1:0] data_rb_o
-		
+        output wire [NB_DATA-1:0] data_rb_o,
+
+		output wire [7-1:0] address_jump,
+		output wire [7-1:0] address_branch
 	);
 
 	wire [NB_REG-1:0] addr_A_out;
@@ -38,7 +48,7 @@ module decode_top
 	// Conexion distribuidor, banco de registros y control unit
 	wire [5:0]operation;
 	wire [5:0]funct;
-	wire regDest;
+	// wire regDest;
 	wire branch;
 
 	//distributor
@@ -47,13 +57,35 @@ module decode_top
 	wire [26-1:0] wire_direction;
 	wire [16-1:0] wire_inmediate;
 
+	// control_unit
+	wire [5:0]mem_signals_ctr; 
+	wire [2:0]wb_signals_ctr;
+	wire [1:0]regDest_signal_ctr;
+	wire tipeI_signal_ctr;
+	wire shamt_signal_ctr;
+	wire [NB_OPCODE-1:0] opcode_ctr;
+
+	wire [NB_DATA-1:0] data_ra, data_rb, data_ra_branch, data_rb_branch;
+
+	wire [NB_DATA-1:0] wire_inmediate_sign;
+
+	assign data_ra_o = data_ra;
+	assign data_rb_o = data_rb;
+
     assign wireA_o = wire_A;
     assign wireB_o = wire_B;
-    assign funct_o = funct;
+    // assign funct_o = funct;
+	assign wire_inmediate_sign_o = wire_inmediate_sign;
 
-/* 	assign EX_control_o = (conex_stall) ? {NB_EX_CTRL{1'b0}} : conex_EX_control;
-	assign M_control_o = (conex_stall) ? {NB_MEM_CTRL{1'b0}} : conex_M_control;
-	assign WB_control_o = (conex_stall) ? {NB_WB_CTRL{1'b0}} : conex_WB_control; */
+	assign address_jump = pc_decode + wire_direction;
+
+    assign mem_signals = (stall) ? {6{1'b0}} : mem_signals_ctr;
+	assign wb_signals = (stall) ? {3{1'b0}} : wb_signals_ctr;
+	assign regDest_signal = (stall) ? {2{1'b0}} : regDest_signal_ctr;
+	assign opcode_o = (stall) ? {6{1'b0}} : opcode_ctr;
+	assign funct_o = (stall) ? {6{1'b0}} : funct;
+	assign tipeI_signal = (stall) ? (1'b1) : tipeI_signal_ctr;
+	assign shamt_signal = (stall) ? (1'b0) : shamt_signal_ctr;
 /* 
 	hazard_detection hazard_detection
 	(
@@ -83,6 +115,18 @@ module decode_top
 		.is_equal_o(is_equal),
 		.branch_address_o(addr_branch_o)
 	);	 */
+
+	branch branch
+	(
+		.pc(pc_decode),
+		.inmediate(wire_inmediate_sign),
+		.data_ra_branch(data_ra_branch),
+		.data_rb_branch(data_rb_branch),
+
+		.is_equal(),
+		.branch_address_o()
+	);
+
  	multiplexor_2_in #(.NB_DATA(NB_REG)) addr_debug_or_wireA
 	(
 		.op1_i(wire_A),
@@ -100,8 +144,8 @@ module decode_top
 		.addr_rb_i(wire_B),
 		.addr_rw_i(write_register_i),
 		.data_rw_i(data_rw_i),
-		.data_ra_o(data_ra_o),
-		.data_rb_o(data_rb_o)		
+		.data_ra_o(data_ra),
+		.data_rb_o(data_rb)		
 	);
 	
 	distributor distributor
@@ -122,37 +166,41 @@ module decode_top
 		.clock(clock_i),
         .reset(reset_i),
         .opcode(operation),
-        .funct(funct),
-        .regDest(regDest),
-        .wb_signals(wb_signals),
+        // .funct(funct),
+        // .regDest(regDest),
+        .wb_signals(wb_signals_ctr),
         .branch(branch),
-		.tipeI(tipeI_signal),
-        .regDest_signal(regDest_signal),
+		.tipeI(tipeI_signal_ctr),
+		
+		.shamt(shamt_signal_ctr),
+
+        .regDest_signal(regDest_signal_ctr),
 		.opcode_o(opcode_o),
-        .mem_signals(mem_signals)
+        .mem_signals(mem_signals_ctr)
 	);
 
 	sign_extension sign_extension
 	(
 		.unextend_i(wire_inmediate),
-        .extended_o(wire_inmediate_o) 
+        .extended_o(wire_inmediate_sign) 
 	);	
 
-/* 	Mux2_1#(.NB_DATA(NB_DATA)) mux_reg_A
+
+ 	multiplexor_2_in#(.NB_DATA(NB_DATA)) forward_or_reg_A
 	(
-		.inA(data_forward_EX_MEM_i), //1
-		.inB(reg_data_ra),
-		.sel(forward_A_i),
+		.inA(alu_result), //1
+		.inB(data_ra),
+		.sel(decode_forward_A),
 		.out(data_ra_branch)
 	);
- */
-/* 	Mux2_1#(.NB_DATA(NB_DATA)) mux_reg_B
+    multiplexor_2_in#(.NB_DATA(NB_DATA)) forward_or_reg_B
 	(
-		.inA(data_forward_EX_MEM_i), //1
-		.inB(reg_data_rb),
-		.sel(forward_B_i),
+		.inA(alu_result), //1
+		.inB(data_rb),
+		.sel(decode_forward_B),
 		.out(data_rb_branch)
-	); */
+	);
+
 	/*
 	Mux2_1#(.NB_DATA(NB_DATA)) mux_signal_control //WB, MEM, EX = 0 cuando hay una burbuja.
 	(

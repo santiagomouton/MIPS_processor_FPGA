@@ -15,8 +15,8 @@ module execute_top
 		input wire [NB_REG-1:0]	wire_RW, wire_B,
 		input wire [2-1:0] regDest_signal_i,
 
-		input wire [1:0] forward_signal_regA;
-		input wire [1:0] forward_signal_regB;
+		input wire [1:0] forward_signal_regA,
+		input wire [1:0] forward_signal_regB,
 		input wire [NB_DATA-1:0] ex_mem_data,
 		input wire [NB_DATA-1:0] mem_wb_data,
 		
