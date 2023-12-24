@@ -1,6 +1,6 @@
 
 
-module top_pipeline
+module top_pipeline_board
 	#(		
 		parameter NB_DATA = 32,
 		parameter NB_OPCODE = 6,
@@ -17,7 +17,7 @@ module top_pipeline
 	(
 		input wire clk_in,
 		input wire reset,
-        input wire receiving;
+        input wire receiving,
         //input wire en_pipeline,
         output wire debug_out,
 
@@ -108,6 +108,7 @@ module top_pipeline
     wire [7-1:0] addr_mem_debug;
 	wire select_debug_or_alu_result;
 	wire [NB_DATA-1:0] data_mem_debug;
+    wire [6:0] data_pc_debug;
 
     // forward_unit
     wire [1:0] forward_signal_regA;
@@ -126,6 +127,7 @@ module top_pipeline
 
     assign data_registers_debug = data_ra_o_decode;
     assign data_mem_debug = data_read_interface_o;
+    assign data_pc_debug = pc_decode;
 
 
     wire clock;
@@ -156,21 +158,21 @@ module top_pipeline
 
     hazard_unit hazard_unit
     (
-		.dec_ex_mem_read(mem_signals_o_execute[6]),
+		.dec_ex_mem_read(mem_signals_o_execute[5]),
 		.wire_A_decode(wire_A_o_decode),
 		.wire_B_decode(wire_B_o_decode),
 		.dec_ex_register_b(wire_B_o_execute),
 		// .[NB_REG-1:0] writeReg_execute,
 
 		//.[NB_OPCODE-1:0] op_code_i,
-		.EX_reg_write_i(), //vacio por ahora
+		.EX_reg_write_i(1'b0), //vacio por ahora
 		//.beq_i, bne_i,
-		.EX_write_register_i(), //vacio por ahora
-		.halt_i(),
+		.EX_write_register_i(1'b0), //vacio por ahora
+		.halt_i(1'b0), //vacio por ahora
 
-        stall_o(stall),
-		pc_write_o(pc_write_o), //detiene cargar la sig direccion
-		if_dec_write_o(if_dec_write_o) //detiene cargar la instruccion en el registro IF_ID
+        .stall_o(stall),
+		.pc_write_o(pc_write_o), //detiene cargar la sig direccion
+		.if_dec_write_o(if_dec_write_o) //detiene cargar la instruccion en el registro IF_ID
 
     );
 
@@ -390,13 +392,15 @@ module top_pipeline
         .addr_mem_debug(addr_mem_debug),
 	    .select_debug_or_alu_result(select_debug_or_alu_result),
 	    .data_mem_debug(data_mem_debug),
+
+        .data_pc_debug(data_pc_debug),
     
-        .state_paraver(state_paraver),
-        .count_paraver(count_paraver),
-        .data_to_send_paraver(data_to_send_paraver), 
-        .en_send_registers_paraver(en_send_registers_paraver), 
-        .tx_done_paraver(tx_done_paraver), 
-        .count_send_bytes_paraver(count_send_bytes_paraver), 
+        .state_paraver(),
+        .count_paraver(),
+        .data_to_send_paraver(), 
+        .en_send_registers_paraver(), 
+        .tx_done_paraver(), 
+        .count_send_bytes_paraver(), 
 
         .debug_out(debug_out), 
 	    .o_data_mem(o_data_mem),

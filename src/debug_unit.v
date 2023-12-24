@@ -40,6 +40,8 @@ module debug_unit
 	output reg [NB_ADDR-1:0] addr_mem_debug,
 	input  wire [NB_DATA-1:0] data_mem_debug,
 
+	input wire [6:0] data_pc_debug,
+
 	output wire [NB_STATE-1:0] state_paraver,
 	output wire [2:0] count_paraver,
 	output wire en_send_registers_paraver,
@@ -49,7 +51,7 @@ module debug_unit
 
     reg en_pipeline_reg;
 	reg [2:0]count;
-	reg [6:0]o_dir_wr_mem_next;
+	// reg [6:0]o_dir_wr_mem_next;
 	reg en_snd_instr;
     reg finish_rcv;
 	reg rcv_instr_complete;
@@ -57,7 +59,7 @@ module debug_unit
 	reg [NB_STATE-1:0] next_state;
 	reg en_rcv_instr;
 	reg wrote;
-	reg en_wait_mode;
+	reg en_wait_state;
 	reg mode_rcv;
 	reg [7:0] mode;
 	reg step_mode_en;
@@ -111,13 +113,13 @@ module debug_unit
 				state <= next_state;
 		end
 	/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-	always @(posedge clock_i) 
+/* 	always @(posedge clock_i) 
 		begin			
 			if (reset_i)
 				o_dir_wr_mem <= 7'b0000000;						
 			else
 				o_dir_wr_mem <= o_dir_wr_mem_next;
-		end
+		end */
 	/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
     always @(posedge clock_i)
@@ -133,12 +135,12 @@ module debug_unit
     				if (en_rcv_instr)
     					begin
 							if (count == 3'b100) begin
+								count <= 3'b000;
 								/* Si recivo 32 bits en 1 logicos significa que termino la recepcion de instrucciones */
 								if (o_data_mem == 32'b11111111111111111111111111111111)
 								begin
 									finish_rcv <= 1'b1;
-									o_dir_wr_mem <= 7'bxxxxxxx;
-									count <= 3'b000;
+									// o_dir_wr_mem <= 7'bxxxxxxx;
 								end
 								else begin
 									rcv_instr_complete <= 1;
@@ -154,7 +156,8 @@ module debug_unit
     					end		    			
 		    		else
 		    			begin		    			
-		    				count <= count; 
+		    				count <= count;
+							rcv_instr_complete <= 0;
 		    			end 			
     			end
     	end
@@ -163,23 +166,24 @@ module debug_unit
 		begin
 			if (reset_i)
 				begin
-					count <= 3'b000;
+					o_dir_wr_mem <= 7'b0000000;
 					write_to_register <= 1'b0;
 				end	
 			else
 				begin
 					if (en_snd_instr)
 						begin
-							count <= 3'b000;
+							// count <= 3'b000;
 							write_to_register <= 1'b1;
     						en_snd_instr <= 0;
+							o_dir_wr_mem <= o_dir_wr_mem + 1;
     						wrote <= 1;
 						end
-					else if (read_rx)
+					/* else if (read_rx)
 						begin
 							o_data_mem <= {dout, o_data_mem[NB_DATA    -1:8]};
 							count <= count + 1;
-						end  			
+						end   */			
 					else
 						begin
 							wrote <= 0;
@@ -197,7 +201,7 @@ module debug_unit
 				end	
 			else
 				begin
-					if (en_wait_mode)
+					if (en_wait_state)
 						begin
 							if (read_rx)
 							begin
@@ -216,7 +220,7 @@ module debug_unit
 		begin
 			if (reset_i)
 				begin
-					aux_step_mode <= 1'b0;
+					// aux_step_mode <= 1'b0;
 					stop_step <= 1'b0;
 				end	
 			else
@@ -234,7 +238,7 @@ module debug_unit
 						end		    			
 					else
 						begin
-							aux_step_mode <= 1'b0;
+							// aux_step_mode <= 1'b0;
 							stop_step <= 1'b0;
 						end	  
 				end
@@ -245,6 +249,7 @@ reg [N_BITS-1:0] data_to_send;
 reg tx_start;
 reg	en_send_registers;
 reg	en_send_memory;
+reg	en_send_pc;
 reg	all_data_sent;
 
 assign data_to_send_paraver = data_to_send;
@@ -258,6 +263,7 @@ assign count_send_bytes_paraver = count_send_bytes;
 				begin
 					en_send_registers <= 1'b0;
 					en_send_memory    <= 1'b0;
+					en_send_pc    	  <= 1'b0;
 					count_send_bytes  <= 3'b000;
 					addr_reg_debug      <= 5'b0;
 					addr_mem_debug 		<= 7'b0;
@@ -299,13 +305,30 @@ assign count_send_bytes_paraver = count_send_bytes;
 										if (addr_mem_debug == N_MEMORY_DATA-1) begin
 											addr_mem_debug <= 7'b0;
 											en_send_memory 	  <= 1'b0;
-											all_data_sent <= 1'b1;
+											en_send_pc	 	  <= 1'b1;
 										end
 										else begin
 											addr_mem_debug <= addr_mem_debug + 1;
 										end
 									end else begin
 										data_to_send <= data_mem_debug[count_send_bytes*N_BITS+:N_BITS];
+										tx_start <= 1'b1;
+										count_send_bytes <= count_send_bytes + 1;
+									end
+								end
+								else begin
+									tx_start <= 1'b0;
+								end
+
+							end
+							else if(en_send_pc) begin
+								if (tx_done) begin
+									if (count_send_bytes == 1) begin
+										count_send_bytes  <= 3'b000;
+										en_send_pc	   <= 1'b0;
+										all_data_sent <= 1'b1;
+									end else begin
+										data_to_send <= data_pc_debug;
 										tx_start <= 1'b1;
 										count_send_bytes <= count_send_bytes + 1;
 									end
@@ -340,9 +363,10 @@ assign count_send_bytes_paraver = count_send_bytes;
 		    
 			next_state = state;
 			en_rcv_instr = 1'b0;
-			// rcv_instr_complete = 1'b0;					
-			en_snd_instr = 1'b0;					
+							
+			en_snd_instr = 1'b0;		// ojo con esta variable			
 			// finish_rcv = 1'b0;
+			en_wait_state = 1'b0;
 			en_pipeline_reg = 1'b0;
 			en_read_mem = 1'b0;
 			step_mode_en = 1'b0;
@@ -355,8 +379,8 @@ assign count_send_bytes_paraver = count_send_bytes;
 				Iddle:
 					begin
 						next_state = Receive_Instruction;
-						o_dir_wr_mem_next = 7'b0000000;
-						en_wait_mode = 1'b0;
+						// o_dir_wr_mem_next = 7'b0000000;
+						en_wait_state = 1'b0;
 
 					end
 				Receive_Instruction:
@@ -375,10 +399,10 @@ assign count_send_bytes_paraver = count_send_bytes;
 					end				
 				Write_Instruction:					
 					begin
-						rcv_instr_complete = 0;					
+						// rcv_instr_complete = 0;		
 						if (wrote)
 							begin
-								o_dir_wr_mem_next = o_dir_wr_mem + 1;
+								// o_dir_wr_mem_next = o_dir_wr_mem + 1;
 								next_state  = Receive_Instruction;						
 							end
 						else
@@ -386,10 +410,10 @@ assign count_send_bytes_paraver = count_send_bytes;
 					end	
 				Wait_mode:
 					begin
-						en_wait_mode = 1'b1;
+						en_wait_state = 1'b1;
 						if (mode_rcv)
 							begin
-								en_wait_mode = 1'b0;
+								en_wait_state = 1'b0;
 								next_state = Check_Operation;
 							end											
 						else
@@ -472,7 +496,7 @@ assign count_send_bytes_paraver = count_send_bytes;
         .rx_done_tick(read_rx), 
         .dout(dout),
         .clock(clock_i),
-        .rx_state(rx_state),
+        .rx_state(),
         .reset(reset_i)
     );
 

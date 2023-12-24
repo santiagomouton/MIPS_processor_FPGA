@@ -10,7 +10,7 @@ module branch
 		input wire [NB_DATA-1:0] data_rb_branch,
 
 		output wire is_equal,
-		output wire [`ADDRWIDTH-1:0] branch_address_o
+		output wire [7-1:0] branch_address_o
 
 	);
 

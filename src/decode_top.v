@@ -147,7 +147,6 @@ module decode_top
         // .funct(funct),
         // .regDest(regDest),
         .wb_signals(wb_signals_ctr),
-        .branch(branch),
 		.tipeI(tipeI_signal_ctr),
 		
 		.shamt(shamt_signal_ctr),
@@ -167,20 +166,20 @@ module decode_top
         .extended_o(wire_inmediate_sign) 
 	);	
 
-
+ //OJO CON ESTO, SELECCION QUIZAS INCORRECTA
  	multiplexor_2_in#(.NB_DATA(NB_DATA)) forward_or_reg_A
 	(
-		.inA(alu_result), //1
-		.inB(data_ra),
-		.sel(decode_forward_A),
-		.out(data_ra_branch)
+		.op1_i(data_ra),
+		.op2_i(alu_result), //1
+		.sel_i(decode_forward_A),
+		.data_o(data_ra_branch)
 	);
     multiplexor_2_in#(.NB_DATA(NB_DATA)) forward_or_reg_B
 	(
-		.inA(alu_result), //1
-		.inB(data_rb),
-		.sel(decode_forward_B),
-		.out(data_rb_branch)
+		.op1_i(data_rb),
+		.op2_i(alu_result),
+		.sel_i(decode_forward_B),
+		.data_o(data_rb_branch)
 	);
 
 endmodule

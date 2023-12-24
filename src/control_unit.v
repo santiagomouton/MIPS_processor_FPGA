@@ -70,6 +70,7 @@ module control_unit
         bne_reg   = 1'b0;
         // memWrite_reg = 1'b0;
 
+        pc_src_reg     = 2'b00;
         regDest_signal_reg = 2'b00;
         mem_signals_reg = 6'b000000;
         wb_signals_reg = 3'b000;
@@ -247,7 +248,7 @@ module control_unit
     end
 
     assign wb_signals = wb_signals_reg;
-    assign regWrite = regWrite_reg;
+    // assign regWrite = regWrite_reg;
     assign tipeI = tipeI_reg;
     assign shamt = shamt_reg;
     assign beq = beq_reg;
