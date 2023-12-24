@@ -15,49 +15,23 @@ module top_pipeline
         parameter NB_ADDR = 7		
 	)
 	(
-		input wire clock,
-		input wire reset,		
-		// input wire enable_i,
-		// input wire en_read_i,
-        input wire [N_BITS - 1:0] din,
-        input wire read_tx,
-        input wire empty,
+		input wire clk_in,
+		input wire reset,
+        input wire receiving;
         //input wire en_pipeline,
-
-        output wire finish_send,
         output wire debug_out,
 
-        output wire [NB_DATA-1:0]instruction_paraver,
-		output wire [NB_DATA-1:0]inmediate_o_paraver,
-        output wire [4:0] wire_A_paraver,
-        output wire [4:0] wire_B_paraver,
-        output wire en_pipeline_paraver,
-		output wire [NB_DATA-1:0]operation_o_paraver, //alu result
-		// output wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver,
-		// output wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver,
-		// output wire [6-1:0]mem_signals_o_paraver,
-        // output wire [1:0] mem_to_reg_signal_paraver,
         output wire [12-1:0] state_paraver,
-		output wire [NB_DATA-1:0]data_a_o_paraver,
-        output wire wrote_paraver,
-        // output wire [2:0] count_paraver,
         output wire [N_BITS-1:0] data_to_send_paraver,
-        // output wire en_send_registers_paraver,
-        // output wire select_debug_or_wireA_paraver,
-        // output wire tx_done_paraver,
-        // output wire [2:0] count_send_bytes_paraver,
-        output wire [NB_ADDR-1:0] addr_mem_debug_paraver,
         output wire [7-1:0]o_dir_wr_mem_paraver,
         output wire [NB_DATA-1:0] o_B_to_alu_paraver,
         output wire [6-1:0] funct_for_alu_paraver
-        // output wire [NB_DATA-1:0]o_data_mem_paraver
 	);
 
 	wire [7:0]  dout;
-	wire tx_rx;
+
 	wire tick;
-	wire read_rx; 
-    wire tx_done_tick;
+	wire read_rx;
 	// wire [5 - 1:0]rx_state;
 
     wire en_pipeline;
@@ -153,23 +127,20 @@ module top_pipeline
     assign data_registers_debug = data_ra_o_decode;
     assign data_mem_debug = data_read_interface_o;
 
-	assign finish_send = tx_done_tick;
 
-    /* señales paraver */
-    assign operation_o_paraver = alu_result_execute;
-	assign inmediate_o_paraver = wire_inmediate_o_decode;
-	assign data_a_o_paraver = data_ra_o_execute;
-    // assign dataInterfaceMEM_o_paraver = data_wr_to_mem_o_mem;
-    // assign dataWr_ex_mem_stage_o_paraver = data_read_interface_o;
-    // assign mem_signals_o_paraver = mem_signals_o_mem;
-    // assign mem_to_reg_signal_paraver = mem_to_reg_o_wb;
-    assign wire_A_paraver = wire_A_o_decode;
-    assign wire_B_paraver = wire_B_o_decode;
-    assign instruction_paraver = instruction_fetch;
-    assign wrote_paraver = ready_data_mem;
-    // assign select_debug_or_wireA_paraver = select_debug_or_wireA;
-    assign addr_mem_debug_paraver = addr_mem_debug;
-    assign en_pipeline_paraver = en_pipeline;
+    wire clock;
+    assign clock = clk_wiz_out & locked;
+
+    clk_wiz_0 instance_name
+    (
+        // Clock out ports
+        .clk_out1(clk_wiz_out),     // output clk_out1
+        // Status and control signals
+        .reset(reset),          // input reset
+        .locked(locked),        // output locked
+        // Clock in ports
+        .clk_in1(clk_in)       // input clk_in1
+    );      
 
 
     decode_forward decode_forward
@@ -411,7 +382,7 @@ module top_pipeline
         .clock_i(clock),
         .reset_i(reset),
         .tick(tick),
-	    .tx_rx(tx_rx),
+	    .tx_rx(receiving),
 	    .select_debug_or_wireA(select_debug_or_wireA),
 	    .addr_reg_debug(addr_reg_debug),
 	    .data_registers_debug(data_registers_debug),
@@ -442,17 +413,6 @@ module top_pipeline
         .reset  (reset)
     );
     
-   // ______________________ Tx ____________ //
-    tx_uart mytx_uart(
-        .s_tick(tick), 
-        .tx(tx_rx),							// bit salida hacia rx
-        .read_tx(read_tx),					// habilitado para leer
-        .tx_done_tick(tx_done_tick),                                     // 1 cuando termino de enviar
-        .tx_start(empty),												// 1 cuando comienza a transmitir
-        .din(din),							// dato a leer
-        .clock(clock),
-        .reset(reset)
-    );
 
     // assign o_data_mem_paraver = o_data_mem;
     assign o_dir_wr_mem_paraver = o_dir_mem_write;

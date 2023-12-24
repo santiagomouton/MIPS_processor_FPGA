@@ -39,8 +39,11 @@ module decode_top
         output wire [NB_DATA-1:0] data_ra_o,
         output wire [NB_DATA-1:0] data_rb_o,
 
+		output wire pc_branch_or_jump,
 		output wire [7-1:0] address_jump,
-		output wire [7-1:0] address_branch
+		output wire [7-1:0] address_branch,
+		output wire [7-1:0] address_register,
+		output wire [1:0] pc_src
 	);
 
 	wire [NB_REG-1:0] addr_A_out;
@@ -49,7 +52,7 @@ module decode_top
 	wire [5:0]operation;
 	wire [5:0]funct;
 	// wire regDest;
-	wire branch;
+	wire is_equal;
 
 	//distributor
 	wire [NB_REG-1:0] wire_A;
@@ -62,6 +65,7 @@ module decode_top
 	wire [2:0]wb_signals_ctr;
 	wire [1:0]regDest_signal_ctr;
 	wire tipeI_signal_ctr;
+	wire beq, bne, jump;
 	wire shamt_signal_ctr;
 	wire [NB_OPCODE-1:0] opcode_ctr;
 
@@ -77,7 +81,9 @@ module decode_top
     // assign funct_o = funct;
 	assign wire_inmediate_sign_o = wire_inmediate_sign;
 
-	assign address_jump = pc_decode + wire_direction;
+	assign pc_branch_or_jump = ((is_equal && beq) | (!is_equal && bne) | jump);
+	assign address_jump = pc_decode + wire_direction[7-1:0]; //acotado porque tomamos solo 32 direcciones de instrucciones en este tp
+	assign address_register = data_ra[7-1:0];
 
     assign mem_signals = (stall) ? {6{1'b0}} : mem_signals_ctr;
 	assign wb_signals = (stall) ? {3{1'b0}} : wb_signals_ctr;
@@ -86,35 +92,7 @@ module decode_top
 	assign funct_o = (stall) ? {6{1'b0}} : funct;
 	assign tipeI_signal = (stall) ? (1'b1) : tipeI_signal_ctr;
 	assign shamt_signal = (stall) ? (1'b0) : shamt_signal_ctr;
-/* 
-	hazard_detection hazard_detection
-	(
-		.ID_rs_i(instruction_i[`RS_BIT]),
-		.ID_rt_i(instruction_i[`RT_BIT]),
-		.EX_reg_write_i(EX_reg_write_i),
-		//.beq_i(conex_beq),
-		//.bne_i(conex_bne),
-		//.op_code_i(instruction_i[`OP_CODE]),
-		.EX_write_register_i(EX_write_register_i),
-		.EX_rt_i(EX_rt_i),
-		.ID_EX_mem_read_i(ID_EX_mem_read_i),		
-		.halt_i(conex_halt_detected),
-		.stall_o(conex_stall),
-		.pc_write_o(pc_write_o),
-		.IF_ID_write_o(IF_ID_write_o)
-	); */
 
-/* 	unit_branch unit_branch
-	(
-		.pc_i(pc_i),
-		.inm_ext_i(reg_inm_ext[`ADDRWIDTH-1:0]),
-
-		.data_ra_i(data_ra_branch),
-		.data_rb_i(data_rb_branch),
-
-		.is_equal_o(is_equal),
-		.branch_address_o(addr_branch_o)
-	);	 */
 
 	branch branch
 	(
@@ -123,8 +101,8 @@ module decode_top
 		.data_ra_branch(data_ra_branch),
 		.data_rb_branch(data_rb_branch),
 
-		.is_equal(),
-		.branch_address_o()
+		.is_equal(is_equal),
+		.branch_address_o(address_branch)
 	);
 
  	multiplexor_2_in #(.NB_DATA(NB_REG)) addr_debug_or_wireA
@@ -173,6 +151,10 @@ module decode_top
 		.tipeI(tipeI_signal_ctr),
 		
 		.shamt(shamt_signal_ctr),
+        .beq(beq),
+		.bne(bne),
+		.jump(jump),
+		.pc_src(pc_src),
 
         .regDest_signal(regDest_signal_ctr),
 		.opcode_o(opcode_o),
@@ -201,14 +183,5 @@ module decode_top
 		.out(data_rb_branch)
 	);
 
-	/*
-	Mux2_1#(.NB_DATA(NB_DATA)) mux_signal_control //WB, MEM, EX = 0 cuando hay una burbuja.
-	(
-		.inA(data_forward_EX_MEM_i), //1
-		.inB(reg_data_rb),
-		.sel(forward_B_i),
-		.out(data_rb_branch)
-	);
-*/
 endmodule
 
