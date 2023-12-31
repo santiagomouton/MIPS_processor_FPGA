@@ -1,0 +1,7 @@
+lw R1, 0(0)
+sra R5, R1, R2
+sllv R6, R1, R2
+and R11, R1, R2
+xor R12, R1, R2
+add R13, R1, R2
+slt R15, R1, R2
