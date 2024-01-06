@@ -19,11 +19,12 @@ module debug_unit
     input wire clock_i,
     input wire reset_i,
 	input wire tick,
+	input wire halt_signal,
 	input wire tx_rx,
     
 	output wire debug_out,
 	output reg [NB_DATA-1:0] o_data_mem,
-	output reg write_to_register,
+	output wire write_to_register,
 	output reg [NB_ADDR-1:0] o_dir_wr_mem,
     output reg en_pipeline_o,
 	output reg en_read_mem,
@@ -90,7 +91,7 @@ module debug_unit
 	localparam 	[NB_STATE-1:0]			Step_mode            	=  12'b000000100000; //32
 	localparam 	[NB_STATE-1:0]			Stop					=  12'b000001000000; //64
 	localparam 	[NB_STATE-1:0]			Continue  		   		=  12'b000010000000; //128
-	localparam 	[NB_STATE-1:0]			Sending_data_pc    	   	=  12'b000100000000; //256
+	localparam 	[NB_STATE-1:0]			Tx_data_to_computer    	=  12'b000100000000; //256
 /*	
 	localparam 	[NB_STATE-1:0]			Sending_count_cyles 	=  12'b001000000000; //512
 	localparam 	[NB_STATE-1:0]			Sending_data_registers	=  12'b010000000000; //1024
@@ -162,20 +163,23 @@ module debug_unit
     			end
     	end
 
+reg write_to_register_reg;
+assign write_to_register = write_to_register_reg;
+
 	always @(posedge clock_i)
 		begin
 			if (reset_i)
 				begin
 					o_dir_wr_mem <= 7'b0000000;
-					write_to_register <= 1'b0;
+					// write_to_register <= 1'b0;
 				end	
 			else
 				begin
 					if (en_snd_instr)
 						begin
 							// count <= 3'b000;
-							write_to_register <= 1'b1;
-    						en_snd_instr <= 0;
+							// write_to_register <= 1'b1;
+    						// en_snd_instr <= 0;
 							o_dir_wr_mem <= o_dir_wr_mem + 1;
     						wrote <= 1;
 						end
@@ -187,7 +191,7 @@ module debug_unit
 					else
 						begin
 							wrote <= 0;
-							write_to_register <= 1'b0;
+							// write_to_register <= 1'b0;
 						end	  
 				end
 		end
@@ -363,7 +367,8 @@ assign count_send_bytes_paraver = count_send_bytes;
 		    
 			next_state = state;
 			en_rcv_instr = 1'b0;
-							
+			
+			write_to_register_reg = 1'b0; 
 			en_snd_instr = 1'b0;		// ojo con esta variable			
 			// finish_rcv = 1'b0;
 			en_wait_state = 1'b0;
@@ -390,7 +395,8 @@ assign count_send_bytes_paraver = count_send_bytes;
 						if (rcv_instr_complete)
 							begin																												
 								next_state = Write_Instruction;
-								en_snd_instr = 1;													
+								en_snd_instr = 1;	
+								write_to_register_reg = 1'b1;												
 							end					      
 						else if (finish_rcv)
 							begin																												
@@ -399,6 +405,7 @@ assign count_send_bytes_paraver = count_send_bytes;
 					end				
 				Write_Instruction:					
 					begin
+						en_snd_instr = 0;	
 						// rcv_instr_complete = 0;		
 						if (wrote)
 							begin
@@ -435,9 +442,15 @@ assign count_send_bytes_paraver = count_send_bytes;
 					begin						
 						en_read_mem = 1'b1;
 						step_mode_en = 1'b1;
+						if (halt_signal)
+							begin
+								en_pipeline_reg = 1'b0;
+								en_send_data_pc = 1'b1;
+								next_state = Tx_data_to_computer;
+							end	
 						if (stop_step) begin
 							en_pipeline_reg = 1'b0;		
-							next_state = Sending_data_pc;		
+							next_state = Tx_data_to_computer;		
 						end
 						else begin
 							en_pipeline_reg = 1'b1;
@@ -452,9 +465,24 @@ assign count_send_bytes_paraver = count_send_bytes;
 				Continue:
 					begin						
 						en_pipeline_reg = 1'b1;
-						en_read_mem = 1'b1;			
+						en_read_mem = 1'b1;
+						// enable_mem_o = 1'b1;						
+
+						next_state = Continue;
+						
+						//read_reg = 1'b1;	//habilita lectura de memoria de instrucciones				
+						//rw_reg = 1'b0; //tambien para escribir mem instrucciones, habilita escritura	
+						//debug_unit_reg = 1'b0;  //para escribir en memoria de instrucciones, controla direccion		
+
+
+						if (halt_signal)
+							begin
+								en_pipeline_reg = 1'b0;
+								en_send_data_pc = 1'b1;
+								next_state = Tx_data_to_computer;
+							end		
 					end	
-				Sending_data_pc:
+				Tx_data_to_computer:
 					begin				
 						// en_pipeline_reg = 1'b0;
 						en_read_mem = 1'b0;
@@ -466,7 +494,7 @@ assign count_send_bytes_paraver = count_send_bytes;
 						if (all_data_sent) begin
 							next_state = Wait_mode;
 						end else begin
-							next_state = Sending_data_pc;
+							next_state = Tx_data_to_computer;
 						end		
 					end	
 				default:

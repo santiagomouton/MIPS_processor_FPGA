@@ -12,12 +12,10 @@ module hazard_unit
 		input wire [NB_REG-1:0] dec_ex_register_b,
 		// input wire [NB_REG-1:0] writeReg_execute,
 
-		//input wire [NB_OPCODE-1:0] op_code_i,
 		input wire EX_reg_write_i,
-		//input wire beq_i, bne_i,
 		input wire [NB_REG-1:0] EX_write_register_i,
+		input wire halt_signal,
 
-		input wire halt_i,
 		output reg stall_o,
 		output wire pc_write_o, //detiene cargar la sig direccion
 		output wire if_dec_write_o //detiene cargar la instruccion en el registro IF_ID
@@ -26,18 +24,18 @@ module hazard_unit
 	);
 
  	reg reg_pc_write, reg_if_dec_write;
-/*	
+	
 	initial
 		begin
-			reg_pc_write    = 1'b1;
+			reg_pc_write     = 1'b1;
 			reg_if_dec_write = 1'b1; 
-			stall_o = 1'b0; 
-		end */
+			stall_o 		 = 1'b0; 
+		end
 
 	always @(*)
 		begin // LOAD R|I|B + HALT
 			if (((dec_ex_mem_read == 1'b1) && ((dec_ex_register_b != 5'b0) && 
-			((dec_ex_register_b == wire_A_decode) || (dec_ex_register_b == wire_B_decode)))) )// || halt_i)                
+			((dec_ex_register_b == wire_A_decode) || (dec_ex_register_b == wire_B_decode)))) || halt_signal)                
 				begin						
 					reg_pc_write = 1'b0;
 					reg_if_dec_write = 1'b0;

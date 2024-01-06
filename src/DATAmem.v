@@ -41,24 +41,24 @@ module DATAmem
     
     always @(negedge clock_i)
     begin
-        // if (enable_mem_i)
-        // begin
-            if (mem_write_i)
-                RAM[addr_i] <= data_write_i;
-        // end
-        // else
-        //     RAM[addr_i] <= RAM[addr_i];
+        if (enable_mem_i)
+            begin
+                if (mem_write_i)
+                    RAM[addr_i] <= data_write_i;
+            end
+        else
+            RAM[addr_i] <= RAM[addr_i];
     end
 
     always @(negedge clock_i)
     begin
-        // if (enable_mem_i)
-        // begin          
-            if (mem_read_i)
-                data_reg <= RAM[addr_i];
-        //     else
-        //         data_reg <= 32'bz;
-        // end
+        if (enable_mem_i)
+            begin          
+                if (mem_read_i)
+                    data_reg <= RAM[addr_i];
+            else
+                data_reg <= 32'bz;
+            end
     end
 
 endmodule

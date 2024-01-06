@@ -43,7 +43,8 @@ module decode_top
 		output wire [7-1:0] address_jump,
 		output wire [7-1:0] address_branch,
 		output wire [7-1:0] address_register,
-		output wire [1:0] pc_src
+		output wire [1:0] pc_src,
+		output wire halt_signal
 	);
 
 	wire [NB_REG-1:0] addr_A_out;
@@ -156,8 +157,9 @@ module decode_top
 		.pc_src(pc_src),
 
         .regDest_signal(regDest_signal_ctr),
-		.opcode_o(opcode_o),
-        .mem_signals(mem_signals_ctr)
+		.opcode_o(opcode_ctr),
+        .mem_signals(mem_signals_ctr),
+		.halt_signal(halt_signal)
 	);
 
 	sign_extension sign_extension

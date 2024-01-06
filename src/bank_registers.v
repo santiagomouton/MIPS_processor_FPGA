@@ -56,7 +56,6 @@ module bank_registers
   				end
         end
 
-	    // Inicializacion de registros.
 	generate
 	    integer i;		
 

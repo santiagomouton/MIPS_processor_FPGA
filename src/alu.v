@@ -54,6 +54,16 @@ module alu
             6'b100111: begin
                 o_o = ~(i_a | i_b);
             end
+            /* SLT */
+            6'b101010: begin
+                o_o = i_a < i_b;
+            end
+            /* LUI */
+            6'b001111: begin
+                o_o = i_b << 16;
+            end
+
+            default : o_o = 32'b0;
         endcase
     end
 

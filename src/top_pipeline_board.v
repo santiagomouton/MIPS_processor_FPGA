@@ -18,15 +18,26 @@ module top_pipeline_board
 		input wire clk_in,
 		input wire reset,
         input wire receiving,
-        //input wire en_pipeline,
         output wire debug_out,
 
-        output wire [12-1:0] state_paraver,
+/*         output wire [12-1:0] state_paraver,
         output wire [N_BITS-1:0] data_to_send_paraver,
         output wire [7-1:0]o_dir_wr_mem_paraver,
         output wire [NB_DATA-1:0] o_B_to_alu_paraver,
-        output wire [6-1:0] funct_for_alu_paraver
+        output wire [6-1:0] funct_for_alu_paraver */
+
+        output wire state_Receive_Instruction,
+        output wire state_Wait_mode,
+        output wire state_Continue,
+        output wire state_Tx_data_to_computer
+
 	);
+
+    wire [12-1:0] state_paraver;
+    assign state_Receive_Instruction = state_paraver[1];
+    assign state_Wait_mode           = state_paraver[3];
+    assign state_Continue            = state_paraver[7];
+    assign state_Tx_data_to_computer = state_paraver[8];
 
 	wire [7:0]  dout;
 
@@ -58,6 +69,7 @@ module top_pipeline_board
     wire [5:0]mem_signals_decode;
     wire [2:0]wb_signals_decode;
     wire tipeI_signal_decode;
+    wire halt_signal_decode;
 
     wire pc_branch_or_jump;
     wire [7-1:0] address_jump;
@@ -78,7 +90,8 @@ module top_pipeline_board
     wire [5-1:0] wire_RW_o_execute;
     wire [1:0]regDest_signal_o_execute;
     wire [5:0]mem_signals_o_execute;
-    wire [2:0]wb_signals_o_execute;    
+    wire [2:0]wb_signals_o_execute;
+    wire halt_signal_o_execute;
 
     //execute_mem_stage
     wire [7-1:0] pc_o_mem;
@@ -90,6 +103,7 @@ module top_pipeline_board
     wire [5:0] mem_signals_o_mem;
     wire [2:0] wb_signals_o_mem;
     wire [NB_DATA-1:0] data_rb_o;
+    wire halt_signal_o_mem;
 
     // mem_wb_stage
     wire [NB_DATA-1:0] data_read_interface_o;
@@ -100,6 +114,7 @@ module top_pipeline_board
     wire [1:0] mem_to_reg_o_wb;
     wire reg_write_o_wb;
 	wire [NB_DATA-1:0] data_write_to_reg;
+    wire halt_signal_o_wb;
 
     // debug_unit
     wire select_debug_or_wireA;
@@ -163,17 +178,14 @@ module top_pipeline_board
 		.wire_B_decode(wire_B_o_decode),
 		.dec_ex_register_b(wire_B_o_execute),
 		// .[NB_REG-1:0] writeReg_execute,
+		.halt_signal(halt_signal_decode),
 
-		//.[NB_OPCODE-1:0] op_code_i,
 		.EX_reg_write_i(1'b0), //vacio por ahora
-		//.beq_i, bne_i,
 		.EX_write_register_i(1'b0), //vacio por ahora
-		.halt_i(1'b0), //vacio por ahora
 
         .stall_o(stall),
 		.pc_write_o(pc_write_o), //detiene cargar la sig direccion
 		.if_dec_write_o(if_dec_write_o) //detiene cargar la instruccion en el registro IF_ID
-
     );
 
     forward_unit forward_unit
@@ -207,13 +219,16 @@ module top_pipeline_board
 		.alu_result_i(alu_result_o_mem),
 		.write_register_i(writeReg_o_mem),
         .wb_signals_i(wb_signals_o_mem),
+        .halt_signal_i(halt_signal_o_mem),
+
 		.pc_i(pc_o_mem),
 		.write_register_o(writeReg_o_wb),
 		.mem_data_read_o(mem_data_read_o_wb),
 		.alu_result_o(alu_result_o_wb),
 		.pc_o(pc_o_wb),
         .reg_write_o(reg_write_o_wb),
-        .mem_to_reg_o(mem_to_reg_o_wb)
+        .mem_to_reg_o(mem_to_reg_o_wb),
+        .halt_signal_o(halt_signal_o_wb)
     );
 
     mem_top mem_top
@@ -240,12 +255,15 @@ module top_pipeline_board
         .pc_i(pc_o_execute),
         .mem_signals_i(mem_signals_o_execute), 
         .wb_signals_i(wb_signals_o_execute), 
+        .halt_signal_i(halt_signal_o_execute),
+
 		.data_wr_to_mem_o(data_wr_to_mem_o_mem),
         .alu_result_o(alu_result_o_mem),
         .writeReg_o(writeReg_o_mem),  
         .pc_o(pc_o_mem),
         .mem_signals_o(mem_signals_o_mem),
-        .wb_signals_o(wb_signals_o_mem)
+        .wb_signals_o(wb_signals_o_mem),
+        .halt_signal_o(halt_signal_o_mem)
     );
 
     execute_top execute_top
@@ -292,6 +310,7 @@ module top_pipeline_board
         .register_rw_i(wire_RW_o_decode),
         .mem_signals_i(mem_signals_decode),
         .wb_signals_i(wb_signals_decode),
+        .halt_signal_i(halt_signal_decode),
 
 		.data_ra_o(data_ra_o_execute),
 		.data_rb_o(data_rb_o_execute),
@@ -305,7 +324,8 @@ module top_pipeline_board
         .register_b_o(wire_B_o_execute),
         .register_rw_o(wire_RW_o_execute),
         .mem_signals_o(mem_signals_o_execute),
-        .wb_signals_o(wb_signals_o_execute)
+        .wb_signals_o(wb_signals_o_execute),
+        .halt_signal_o(halt_signal_o_execute)
     );
 
     decode_top decode_top
@@ -348,7 +368,8 @@ module top_pipeline_board
 		.address_jump(address_jump),
 		.address_branch(address_branch),
 		.address_register(address_register),
-		.pc_src(pc_src)
+		.pc_src(pc_src),
+        .halt_signal(halt_signal_decode)
     );
 
 	fetch_decode_stage fetch_decode_stage
@@ -384,6 +405,7 @@ module top_pipeline_board
         .clock_i(clock),
         .reset_i(reset),
         .tick(tick),
+        .halt_signal(halt_signal_o_wb),
 	    .tx_rx(receiving),
 	    .select_debug_or_wireA(select_debug_or_wireA),
 	    .addr_reg_debug(addr_reg_debug),
@@ -395,7 +417,7 @@ module top_pipeline_board
 
         .data_pc_debug(data_pc_debug),
     
-        .state_paraver(),
+        .state_paraver(state_paraver),
         .count_paraver(),
         .data_to_send_paraver(), 
         .en_send_registers_paraver(), 
