@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module forward_unit
 	#(
 		parameter NB_DATA = 32,

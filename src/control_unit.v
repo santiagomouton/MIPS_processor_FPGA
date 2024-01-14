@@ -1,4 +1,4 @@
-
+`timescale 1ns / 1ps
 
 module control_unit
     #(
@@ -9,14 +9,9 @@ module control_unit
 		parameter N_REGDEST = 2
     )
     (
-        input wire clock,
-        input wire reset,
         input wire [NB_OP-1:0]opcode,
         // input wire [NB_FUNCT-1:0]funct,
 
-        // output wire regDest,
-        // output wire regWrite,
-        // output wire memWrite,
         output wire tipeI,
         output wire shamt,
         output wire beq,
@@ -34,7 +29,6 @@ module control_unit
 
     );
 
-    // reg regWrite_reg;
     reg tipeI_reg;
     reg shamt_reg;
     reg beq_reg;
@@ -43,13 +37,11 @@ module control_unit
     reg [1:0]pc_src_reg;
     reg [N_REGDEST-1:0]regDest_signal_reg;
 
-    // reg memWrite_reg;
 
     reg [5:0]mem_signals_reg;
     reg [2:0]wb_signals_reg;
 
     initial begin
-        // regWrite_reg = 1'b0;
         tipeI_reg = 1'b0;     
         shamt_reg = 1'b0;     
         beq_reg = 1'b0;     
@@ -66,12 +58,10 @@ module control_unit
 
     always @(*) begin
 
-        // regWrite_reg = 1'b0;
         tipeI_reg    = 1'b0;
         shamt_reg = 1'b0; 
         beq_reg   = 1'b0;
         bne_reg   = 1'b0;
-        // memWrite_reg = 1'b0;
 
         pc_src_reg     = 2'b00;
         regDest_signal_reg = 2'b00;
@@ -90,9 +80,6 @@ module control_unit
                 mem_signals_reg = 6'b000000;
                 wb_signals_reg = 3'b101;
                 pc_src_reg     = 2'b00;
-                /* if (conditions) begin
-                    regWrite_reg <= 1;
-                end */
             end
             6'b001000: begin  //ADDI
                 tipeI_reg = 1'b1;
@@ -165,7 +152,7 @@ module control_unit
                 wb_signals_reg = 3'b000;
                 pc_src_reg     = 2'b00;
             end
-            6'b001000: begin // 
+/*             6'b001000: begin // 
                 tipeI_reg = 1'b0;
                 beq_reg   = 1'b0;
                 bne_reg   = 1'b0;
@@ -173,7 +160,7 @@ module control_unit
                 regDest_signal_reg = 3'b00;
                 mem_signals_reg = 6'b010100;
                 wb_signals_reg = 3'b000;
-            end
+            end */
 
 
             6'b000100: begin  // BEQ
@@ -241,6 +228,7 @@ module control_unit
                 wb_signals_reg = 3'b000;
             end
             default: begin
+                halt_signal = 1'b0;
                 tipeI_reg = 1'b0;
                 regDest_signal_reg = 3'b00;
                 beq_reg   = 1'b0;
@@ -253,7 +241,6 @@ module control_unit
     end
 
     assign wb_signals = wb_signals_reg;
-    // assign regWrite = regWrite_reg;
     assign tipeI = tipeI_reg;
     assign shamt = shamt_reg;
     assign beq = beq_reg;

@@ -14,6 +14,8 @@ tipo_I =  {"lb": "100000", "lh": "100001", "lw": "100011", "lwu": "010011", "lbu
 
 tipo_J = { "j": "000010", "jal": "000011"}
 
+halt = { "halt": "111111" }
+
 
 
 def decimal_a_binario(decimal, bits=8):
@@ -33,7 +35,7 @@ def binario_a_hexadecimal(binario):
         hexadecimal = "0" * (8 - longitud_actual) + hexadecimal
     return hexadecimal
 
-file   = open ('../mips_codes/code1.txt','r')
+file   = open ('../mips_codes/add.txt','r')
 string = file.read()
 file.close()
 line = string.strip()
@@ -90,6 +92,11 @@ for item in programa:
         op  = tipo_J[instruction[0]]
         inm = decimal_a_binario(int(instruction[1]), 26)
         instruction_ass = str(op) + str(inm)
+
+
+    if (instruction[0] in halt):
+        op  = halt[instruction[0]]
+        instruction_ass = str(op) + "00000000000000000000000000"
 
     file.write( binario_a_hexadecimal(instruction_ass) + "\n")
 

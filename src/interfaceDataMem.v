@@ -4,17 +4,6 @@
 `define HALF_WORD 3'b010
 `define WORD 3'b100
 
-`define N_BYTE 7:0
-`define N_HALF 15:0
-
-`define MEM_READ 4
-`define MEM_WRITE 3
-`define SIZE 2:0
-`define SIGNED 5
-
-// `define N_ELEMENTS 128
-// `define ADDRWIDTH $clog2(`N_ELEMENTS)
-
 module interfaceDataMEM
 	#(
 		parameter NB_DATA     = 32,
@@ -40,23 +29,23 @@ module interfaceDataMEM
 
 	always @(*)
 		begin	
-			if (mem_signals_i[`MEM_READ])
+			if (mem_signals_i[4]) // memory read
 	            begin 	
-	                if (mem_signals_i[`SIGNED]) 
+	                if (mem_signals_i[5]) //signado 
 	                	begin 
-			            	case (mem_signals_i[`SIZE])			            		
+			            	case (mem_signals_i[2:0]) //size(Word, HalfWord, Byte)		            		
 				                	`BYTE:	                		
 				                		begin
-				                			data_read_reg = {{24'b0}, data_read_i[`N_BYTE]};   		  			
+				                			data_read_reg = {24'b0, data_read_i[7:0]};   		  			
 				                		end	                		                
 				                            
 				                	`HALF_WORD:
 				                		begin				                			                			
-				                			data_read_reg = {16'b0, data_read_i[`N_HALF]};  
+				                			data_read_reg = {16'b0, data_read_i[15:0]};  
 				                    	end
 				                    	
 				                	`WORD:
-				                	  begin
+				                	  	begin
 									 		data_read_reg = data_read_i;     
 				                		end
 
@@ -67,15 +56,15 @@ module interfaceDataMEM
 	                	end
 	              	else
 	              		begin
-	              			case (mem_signals_i[`SIZE])	              				
+	              			case (mem_signals_i[2:0])	              				
 				                	`BYTE:	                		
 				                		begin
-				                			data_read_reg = {{24{data_read_i[7]}}, data_read_i[`N_BYTE]}; 			                			           			
+				                			data_read_reg = {{24{data_read_i[7]}}, data_read_i[7:0]}; 			                			           			
 				                		end	                		                
 				                            
 				                	`HALF_WORD:
 				                		begin	                			
-				                			data_read_reg = {{16{data_read_i[15]}}, data_read_i[`N_HALF]};   
+				                			data_read_reg = {{16{data_read_i[15]}}, data_read_i[15:0]};   
 				                    	end
 				                    	
 				                	`WORD:
@@ -96,16 +85,16 @@ module interfaceDataMEM
 
 	always @(*)
 		begin
-			if (mem_signals_i[`MEM_WRITE])
+			if (mem_signals_i[3]) // memory write
 	            begin    
-	            	case (mem_signals_i[`SIZE])
+	            	case (mem_signals_i[2:0])
 	                	`BYTE:
-	                		data_write_reg = data_write_i[`N_BYTE];                
+	                		data_write_reg = data_write_i[7:0];                
 	                            
-	                	`HALF_WORD:               
-	                    	data_write_reg = data_write_i[`N_HALF];	                    
+	                	`HALF_WORD:
+	                    	data_write_reg = data_write_i[15:0];	                    
 
-	                	`WORD:                    
+	                	`WORD:               
 	                    	data_write_reg = data_write_i;         
 	                    default:
 	                    	data_write_reg = 32'b0;

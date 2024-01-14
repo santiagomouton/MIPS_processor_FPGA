@@ -1,5 +1,4 @@
-
-`define OP_CODE 31:26
+`timescale 1ns / 1ps
 
 
 module fetch_top

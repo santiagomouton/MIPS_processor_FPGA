@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module fetch_decode_stage
 	#(
@@ -23,7 +24,7 @@ module fetch_decode_stage
 				
 			else
 				begin
-					pc_o <= pc_o;
+					pc_o 		  <= pc_o;
 					instruction_o <= instruction_o;
 				end
 				

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module ex_mem_stage
 	#(
@@ -29,9 +30,6 @@ module ex_mem_stage
 	reg [7-1:0] pc_reg;
 	reg [NB_DATA-1:0] data_wr_to_mem_reg, alu_result_reg;
     reg [NB_REGWR-1:0] writeReg_reg;
-
-	// reg [NB_FUNCTION-1:0] function_reg;
-	// reg [NB_OP-1:0] opcode_reg;
     reg [5:0] mem_signals_reg;
     reg [2:0] wb_signals_reg;
     reg halt_signal_reg;
@@ -81,10 +79,5 @@ module ex_mem_stage
     assign mem_signals_o    = mem_signals_reg;
     assign wb_signals_o     = wb_signals_reg;
     assign halt_signal_o    = halt_signal_reg;
-
-	// assign function_o = function_reg;
-	// assign opcode_o = opcode_reg;
-	// assign tipeI_o = tipeI_reg;
-
 
 endmodule

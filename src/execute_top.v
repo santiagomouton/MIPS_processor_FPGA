@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module execute_top
 	#(
@@ -40,7 +41,7 @@ module execute_top
 
 
 	//test
-	assign o_B_to_alu_paraver = o_B_to_alu;
+	assign o_B_to_alu_paraver 	 = o_B_to_alu;
 	assign funct_for_alu_paraver = funct_for_alu;
 
     alu alu
@@ -84,7 +85,7 @@ module execute_top
 		.data_o(o_B_to_alu)		
 	);
 
-    multiplexor_3_in#(.NB_DATA(NB_REG)) wireB_or_wireRB
+    multiplexor_3_in#(.NB_DATA(NB_REG)) wireB_or_wireRW
     (
 		.op1_i(wire_B),
 		.op2_i(wire_RW),
@@ -93,24 +94,6 @@ module execute_top
 		.data_o(writeReg_o)
     );
 
-	/* este mux es manejado por la unidad de forward*/
-/* 	Mux3_1 mux_forwardA
-	(
-		.op1_i(data_ra_i), //00
-		.op2_i(EX_MEM_result_alu_i), //01
-		.op3_i(MEM_WB_data_i), //10
-		.sel_i(src_forwardA),
-		.data_o(out_mux_forwardA)
-	);
-	Mux3_1 mux_forwardB
-	(
-		.op1_i(data_rb_i),
-		.op2_i(EX_MEM_result_alu_i),
-		.op3_i(MEM_WB_data_i),
-		.sel_i(src_forwardB),
-		.data_o(out_mux_forwardB)
-	); */
-
 /* 	Mux2_1 #(.NB_DATA(32)) mux_alu_src_A	
 	(
 		.inA({{27'b0},shamt_i}), // sel = 1
@@ -118,27 +101,6 @@ module execute_top
 		.sel(EX_control_i[6]),
 		.out(conex_input_alu_A)
 	);
-
-	Mux2_1 #(.NB_DATA(32)) mux_alu_src_B	
-	(
-		.inA(out_mux_forwardB), // sel = 1
-		.inB(data_inm_i),
-		.sel(EX_control_i[5]),
-		.out(conex_input_alu_B)
-	)
-
- 	unit_forward unit_forward
-	(
-		.ID_EX_rs_i(rs_i),
-		.ID_EX_rt_i(rt_i),
-
-		.EX_MEM_write_reg_i(EX_MEM_write_reg_i),
-		.MEM_WB_write_reg_i(MEM_WB_write_reg_i),
-		.EX_MEM_reg_write_i(EX_MEM_reg_write_i),
-		.MEM_WB_reg_write_i(MEM_WB_reg_write_i),
-
-		.forward_A_o(src_forwardA),
-		.forward_B_o(src_forwardB) 
-	); */
+*/
 
 endmodule

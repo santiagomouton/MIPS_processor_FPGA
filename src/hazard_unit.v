@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module hazard_unit
 	#(
@@ -33,7 +34,7 @@ module hazard_unit
 		end
 
 	always @(*)
-		begin // LOAD R|I|B + HALT
+		begin
 			if (((dec_ex_mem_read == 1'b1) && ((dec_ex_register_b != 5'b0) && 
 			((dec_ex_register_b == wire_A_decode) || (dec_ex_register_b == wire_B_decode)))) || halt_signal)                
 				begin						

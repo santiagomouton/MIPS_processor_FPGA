@@ -1,4 +1,4 @@
-
+`timescale 1ns / 1ps
 
 module top_pipeline_board
 	#(		
@@ -26,22 +26,15 @@ module top_pipeline_board
         output wire [NB_DATA-1:0] o_B_to_alu_paraver,
         output wire [6-1:0] funct_for_alu_paraver */
 
+        output wire state_Iddle,
         output wire state_Receive_Instruction,
-        output wire state_Wait_mode,
-        output wire state_Continue,
-        output wire state_Tx_data_to_computer
+        output reg state_Tx_data_to_computer,
+        output wire state_Continue
 
 	);
 
-    wire [12-1:0] state_paraver;
-    assign state_Receive_Instruction = state_paraver[1];
-    assign state_Wait_mode           = state_paraver[3];
-    assign state_Continue            = state_paraver[7];
-    assign state_Tx_data_to_computer = state_paraver[8];
 
 	wire [7:0]  dout;
-
-	wire tick;
 	wire read_rx;
 	// wire [5 - 1:0]rx_state;
 
@@ -144,11 +137,11 @@ module top_pipeline_board
     assign data_mem_debug = data_read_interface_o;
     assign data_pc_debug = pc_decode;
 
-
+    wire clk_wiz_out;
+    wire locked;
     wire clock;
-    assign clock = clk_wiz_out & locked;
 
-    clk_wiz_0 instance_name
+    clk_wiz_0 clock_wizard
     (
         // Clock out ports
         .clk_out1(clk_wiz_out),     // output clk_out1
@@ -157,8 +150,25 @@ module top_pipeline_board
         .locked(locked),        // output locked
         // Clock in ports
         .clk_in1(clk_in)       // input clk_in1
-    );      
+    );
+    assign clock = clk_wiz_out & locked;
+ 
 
+
+    wire [12-1:0] state_paraver;
+    assign state_Iddle               = state_paraver[0];
+    assign state_Receive_Instruction = state_paraver[1];
+    // assign state_Tx_data_to_computer = state_paraver[5];
+    assign state_Continue            = state_paraver[4];
+
+    always @(posedge clock) begin
+        if (reset) begin
+            state_Tx_data_to_computer <= 1'b0;
+        end
+        if (halt_signal_decode) begin
+            state_Tx_data_to_computer <= 1'b1;
+        end
+    end
 
     decode_forward decode_forward
     (
@@ -190,8 +200,8 @@ module top_pipeline_board
 
     forward_unit forward_unit
     (
-		.register_a_i(wire_A_o_decode),
-		.register_b_i(wire_B_o_decode),
+		.register_a_i(wire_A_o_execute),
+		.register_b_i(wire_B_o_execute),
 		.ex_mem_writeReg_i(writeReg_o_mem),
 		.mem_wb_writeReg_i(writeReg_o_wb),
 		.ex_mem_reg_write_i(wb_signals_o_mem[2]),
@@ -288,8 +298,8 @@ module top_pipeline_board
         .mem_wb_data(data_write_to_reg),
 
         //test
-        .o_B_to_alu_paraver(o_B_to_alu_paraver),
-        .funct_for_alu_paraver(funct_for_alu_paraver)
+        .o_B_to_alu_paraver(),
+        .funct_for_alu_paraver()
     );
 
     decode_execute_stage decode_execute_stage
@@ -404,7 +414,6 @@ module top_pipeline_board
 	(
         .clock_i(clock),
         .reset_i(reset),
-        .tick(tick),
         .halt_signal(halt_signal_o_wb),
 	    .tx_rx(receiving),
 	    .select_debug_or_wireA(select_debug_or_wireA),
@@ -422,26 +431,21 @@ module top_pipeline_board
         .data_to_send_paraver(), 
         .en_send_registers_paraver(), 
         .tx_done_paraver(), 
-        .count_send_bytes_paraver(), 
+        .count_send_bytes_paraver(),
 
         .debug_out(debug_out), 
 	    .o_data_mem(o_data_mem),
 	    .write_to_register(ready_data_mem),
 	    .o_dir_wr_mem(o_dir_mem_write),
         .en_pipeline_o(en_pipeline),
-        .en_read_mem(en_read_i)
+        .en_read_mem(en_read_i),
+        
+        .instruction_decode(instruction_decode)
 	);
-
-    // ______________________ BRG ____________ //
-    BaudRateGenerator myBRG (
-        .tick   (tick),
-        .clock  (clock),
-        .reset  (reset)
-    );
     
 
     // assign o_data_mem_paraver = o_data_mem;
-    assign o_dir_wr_mem_paraver = o_dir_mem_write;
+    // assign o_dir_wr_mem_paraver = o_dir_mem_write;
 
 endmodule
 

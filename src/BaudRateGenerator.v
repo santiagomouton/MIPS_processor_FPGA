@@ -3,14 +3,15 @@
 
 module BaudRateGenerator
 #(
-    parameter   CLOCK_FREQ       = 50000000,                        //50Mhz
-    parameter   BAUD_RATE        = 19200,                           //19,2Khz
+    parameter   CLOCK_FREQ       = 25000000,                        //25Mhz
+    // parameter   BAUD_RATE        = 19200,                           //19,2Khz
+    parameter   BAUD_RATE        = 9600,                           //9,6Khz
     parameter   DIVISION         = 16,
-    parameter   N_CLOCKS         = CLOCK_FREQ/(BAUD_RATE*DIVISION)  // 163 tick
+    parameter   N_CLOCKS         = CLOCK_FREQ/(BAUD_RATE*DIVISION)  // clock/tick 163
 )
 (
     // OUTPUTS
-    output reg tick,
+    output wire tick,
     // INPUTS
     input wire clock,
     input wire reset
@@ -29,20 +30,17 @@ module BaudRateGenerator
     **/
     always @(posedge clock) begin
         if (reset) begin
-            tick        <= 1'b0;
-            counTicks   <= 1'b0;
+            counTicks   <= 8'b0;
         end
         else begin
-            counTicks  <= counTicks + 1'b1;
-            if (counTicks == N_CLOCKS) begin
-                tick        <= 1'b1;
-                counTicks   <= 1'b0;
-            end
-            else begin
-                tick <= 1'b0;
-            end
+            if (counTicks == (N_CLOCKS-1))
+                counTicks   <= 8'b0;
+            else
+                counTicks  <= counTicks + 1;
         end
     end
+
+    assign tick = (counTicks == (N_CLOCKS-1))? 1'b1: 1'b0;
 
 endmodule
 

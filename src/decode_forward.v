@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module decode_forward
 	#(
 		parameter NB_DATA = 32,
@@ -22,16 +24,20 @@ module decode_forward
 
 	always @(*)
 		begin
-			if ((ex_mem_reg_write == 1'b1) && (wire_A_dec == writeReg))
+			/* if ((ex_mem_reg_write == 1'b1) && (wire_A_dec == writeReg))
 				decode_forward_A = 1'b1;//viene de la etapa MEM		
 			else
 				decode_forward_A = 1'b0;
+			 */
+			decode_forward_A = ((ex_mem_reg_write == 1'b1) && (wire_A_dec == writeReg))? 1'b1  //viene de la etapa MEM
+																						:1'b0;
 
-			if ((ex_mem_reg_write == 1'b1) && (wire_B_dec == writeReg))
+			decode_forward_B = ((ex_mem_reg_write == 1'b1) && (wire_B_dec == writeReg))? 1'b1  //viene de la etapa MEM
+																						:1'b0;
+			/* if ((ex_mem_reg_write == 1'b1) && (wire_B_dec == writeReg))
 				decode_forward_B = 1'b1;//viene de la etapa MEM			
 			else
-				decode_forward_B = 1'b0;
-
+				decode_forward_B = 1'b0; */
 		end
 
 endmodule

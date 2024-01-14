@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module decode_top
 	#(
@@ -52,7 +53,6 @@ module decode_top
 	// Conexion distribuidor, banco de registros y control unit
 	wire [5:0]operation;
 	wire [5:0]funct;
-	// wire regDest;
 	wire is_equal;
 
 	//distributor
@@ -83,16 +83,16 @@ module decode_top
 	assign wire_inmediate_sign_o = wire_inmediate_sign;
 
 	assign pc_branch_or_jump = ((is_equal && beq) | (!is_equal && bne) | jump);
-	assign address_jump = pc_decode + wire_direction[7-1:0]; //acotado porque tomamos solo 32 direcciones de instrucciones en este tp
-	assign address_register = data_ra[7-1:0];
+	assign address_jump 	 = pc_decode + wire_direction[7-1:0]; //acotado porque tomamos solo 32 direcciones de instrucciones en este tp
+	assign address_register  = data_ra[7-1:0];
 
-    assign mem_signals = (stall) ? {6{1'b0}} : mem_signals_ctr;
-	assign wb_signals = (stall) ? {3{1'b0}} : wb_signals_ctr;
-	assign regDest_signal = (stall) ? {2{1'b0}} : regDest_signal_ctr;
-	assign opcode_o = (stall) ? {6{1'b0}} : opcode_ctr;
-	assign funct_o = (stall) ? {6{1'b0}} : funct;
-	assign tipeI_signal = (stall) ? (1'b1) : tipeI_signal_ctr;
-	assign shamt_signal = (stall) ? (1'b0) : shamt_signal_ctr;
+    assign mem_signals 	  = (stall) ? {6'b0} : mem_signals_ctr;
+	assign wb_signals     = (stall) ? {3'b0} : wb_signals_ctr;
+	assign regDest_signal = (stall) ? {2'b0} : regDest_signal_ctr;
+	assign opcode_o 	  = (stall) ? {6'b0} : opcode_ctr;
+	assign funct_o 		  = (stall) ? {6'b0} : funct;
+	assign tipeI_signal   = (stall) ? (1'b1) : tipeI_signal_ctr;
+	assign shamt_signal   = (stall) ? (1'b0) : shamt_signal_ctr;
 
 
 	branch branch
@@ -142,11 +142,8 @@ module decode_top
 
 	control_unit control_unit
 	(
-		.clock(clock_i),
-        .reset(reset_i),
         .opcode(operation),
         // .funct(funct),
-        // .regDest(regDest),
         .wb_signals(wb_signals_ctr),
 		.tipeI(tipeI_signal_ctr),
 		

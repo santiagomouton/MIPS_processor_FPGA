@@ -1,4 +1,4 @@
-//`include "parameters.vh"
+`timescale 1ns / 1ps
 
 module top_pc_to_data_mem
 	#(	

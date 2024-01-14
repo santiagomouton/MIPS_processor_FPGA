@@ -10,13 +10,7 @@ module alu
     input  wire [ N_BITS - 1 : 0 ] i_b, //input b 
     input  wire [ 5 : 0 ] i_op, //input operation
     output reg  [ N_BITS - 1 : 0 ] o_o//output operation
-//    output  wire [ 5 : 0 ] salida_operacion,
-//    output  wire [ N_BITS - 1 : 0 ] salida_A,
-//    output  wire [ N_BITS - 1 : 0 ] salida_B
 );
-//    assign salida_operacion = i_op;
-//    assign salida_A = i_a;
-//    assign salida_B = i_b;
     
     always @(*) begin //CIRCUITO CONBINACIONAL
         o_o = 32'bxxxxxxxx_xxxxxxxx_xxxxxxxx_xxxxxxxx; //valor por DEFAULT

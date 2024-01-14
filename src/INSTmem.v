@@ -31,8 +31,8 @@ module INSTmem
 			else 
 				data_reg <= data_reg;							
 		end
-	assign data_o = data_reg;
 	
+	assign data_o = data_reg;
   
 endmodule
 

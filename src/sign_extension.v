@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module sign_extension
     #(
         parameter NB_EXTEND = 32,

@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module multiplexor_4_in
 	#(
 		parameter NB_DATA = 32
