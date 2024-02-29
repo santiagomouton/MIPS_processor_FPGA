@@ -34,10 +34,10 @@ module bank_registers
 						begin
 							if (addr_rw_i != 5'b0)
 								registers[addr_rw_i] <= data_rw_i;
-							if (addr_ra_i == addr_rw_i)
+							/* if (addr_ra_i == addr_rw_i)
 								data_ra_o <= data_rw_i;
 							else if (addr_rb_i == addr_rw_i)
-								data_rb_o <= data_rw_i;
+								data_rb_o <= data_rw_i; */
 						end
 					data_ra_o <= registers[addr_ra_i];
 					data_rb_o <= registers[addr_rb_i];

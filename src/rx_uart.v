@@ -75,14 +75,11 @@ module rx_uart
          
         case (current_state)
             STATE_IDLE : begin
-                case(rx)
-                    1'b0:
-                        begin
-                            count_ticks_next  = 4'b0;
-                            next_state = STATE_START;
-                        end
-                    default:   next_state = STATE_IDLE;
-                endcase
+                if(!rx)                    
+                    begin
+                        count_ticks_next  = 4'b0;
+                        next_state = STATE_START;
+                    end
             end
             // -------------------------------------------------------------------------- //
             STATE_START : begin

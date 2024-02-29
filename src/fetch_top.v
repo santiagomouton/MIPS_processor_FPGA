@@ -64,7 +64,8 @@ module fetch_top
 
 	INSTmem mem_instruction
 	(
-		.clock_i(clock_i),				
+		.clock_i(clock_i),			
+		.reset_i(reset_i),			
 		.addr_i_write(addr_i_write),
 		.addr_i_read(next_addr_o),
 		.en_write_i(en_write_i),

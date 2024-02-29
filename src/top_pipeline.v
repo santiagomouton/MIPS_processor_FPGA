@@ -16,95 +16,68 @@ module top_pipeline
 	)
 	(
 		input wire clock,
-		input wire reset,		
-		// input wire enable_i,
-		// input wire en_read_i,
-        input wire [N_BITS - 1:0] din,
-        input wire read_tx,
-        input wire empty,
-        //input wire en_pipeline,
+		input wire reset,
 
-        output wire finish_send,
-        output wire debug_out,
+        input wire select_debug_or_wireA,
+        input wire [NB_REG-1:0] addr_reg_debug,
+        output wire [NB_DATA-1:0] data_registers_debug,
 
-        output wire [NB_DATA-1:0]instruction_paraver,
-		output wire [NB_DATA-1:0]inmediate_o_paraver,
-        output wire [4:0] wire_A_paraver,
-        output wire [4:0] wire_B_paraver,
-        output wire en_pipeline_paraver,
-		output wire [NB_DATA-1:0]operation_o_paraver, //alu result
-		// output wire [NB_DATA-1:0]dataInterfaceMEM_o_paraver,
-		// output wire [NB_DATA-1:0]dataWr_ex_mem_stage_o_paraver,
-		// output wire [6-1:0]mem_signals_o_paraver,
-        // output wire [1:0] mem_to_reg_signal_paraver,
-        output wire [12-1:0] state_paraver,
-		output wire [NB_DATA-1:0]data_a_o_paraver,
-        output wire wrote_paraver,
-        // output wire [2:0] count_paraver,
-        output wire [N_BITS-1:0] data_to_send_paraver,
-        // output wire en_send_registers_paraver,
-        // output wire select_debug_or_wireA_paraver,
-        // output wire tx_done_paraver,
-        // output wire [2:0] count_send_bytes_paraver,
-        output wire [NB_ADDR-1:0] addr_mem_debug_paraver,
-        output wire [7-1:0]o_dir_wr_mem_paraver,
+        input wire [7-1:0] addr_mem_debug,
+        input wire select_debug_or_alu_result,
+        output wire [NB_DATA-1:0] data_mem_debug,
+
+        output wire [7-1:0] data_pc_debug,
+
+        input wire [NB_DATA-1:0]data_inst_to_write,
+        input wire ready_instr_to_write,
+        input wire [6:0]o_dir_mem_write,
+
+        input wire en_pipeline,
+        input wire en_read_inst,
+        
+        /*      
         output wire [NB_DATA-1:0] o_B_to_alu_paraver,
-        output wire [6-1:0] funct_for_alu_paraver
-        // output wire [NB_DATA-1:0]o_data_mem_paraver
+        output wire [6-1:0] funct_for_alu_paraver */
+
+        output wire halt_signal_o_wb,
+        output wire halt_signal_decode_debug,
+
+        output wire alu_result_o_mem_test
+
 	);
-
-	wire [7:0]  dout;
-	wire tx_rx;
-	wire tick;
-	wire read_rx; 
-    wire tx_done_tick;
-	// wire [5 - 1:0]rx_state;
-
-    wire en_pipeline;
-	wire finish_rcv; 
-    wire ready_data_mem;
-	wire [NB_DATA-1:0]o_data_mem;
-	wire [6:0]o_dir_mem_write;
-	wire [6:0]o_dir_mem_read;
-
-    wire [6:0] pc_fetch;
-    wire [NB_DATA-1:0] instruction_fetch;
     
-    wire [6:0] pc_decode;
-    wire [NB_DATA-1:0] instruction_decode;
-	wire [5-1:0] wire_A_o_decode;
-	wire [5-1:0] wire_B_o_decode;
-	wire [5-1:0] wire_RW_o_decode;
+	// wire [6:0]o_dir_mem_read;
+
+    wire [6:0] pc_fetch, pc_decode;
+    wire [NB_DATA-1:0] instruction_fetch, instruction_decode;
+    
+	wire [5-1:0] wire_A_o_decode, wire_B_o_decode, wire_RW_o_decode;
 	wire [NB_DATA-1:0] wire_inmediate_o_decode;
     wire [NB_OPCODE-1:0] opcode_o_decode;
     wire [5:0] funct_o_decode;
-    wire [1:0]regDest_signal_decode;
-    wire [NB_DATA-1:0] data_ra_o_decode;
-    wire [NB_DATA-1:0] data_rb_o_decode;
+    wire [1:0] regDest_signal_decode;
+    wire [NB_DATA-1:0] data_ra_o_decode, data_rb_o_decode;
     wire [5:0]mem_signals_decode;
     wire [2:0]wb_signals_decode;
     wire tipeI_signal_decode;
+    wire halt_signal_decode;
 
     wire pc_branch_or_jump;
-    wire [7-1:0] address_jump;
-    wire [7-1:0] address_branch;
-    wire [7-1:0] address_register;
+    wire [7-1:0] address_jump, address_branch, address_register;
     wire [1:0]pc_src;
 
     //decode_execute_stage
-    wire [NB_DATA-1:0] data_ra_o_execute;
-    wire [NB_DATA-1:0] data_rb_o_execute;
+    wire [NB_DATA-1:0] data_ra_o_execute, data_rb_o_execute;
     wire [NB_DATA-1:0] inmediate_o_execute;
     wire [7-1:0] pc_o_execute;
     wire [5:0] funct_o_execute;
 	wire [5:0]operation_o_execute;
 	wire tipeI_o_execute;
-    wire [5-1:0] wire_A_o_execute;
-    wire [5-1:0] wire_B_o_execute;
-    wire [5-1:0] wire_RW_o_execute;
+    wire [5-1:0] wire_A_o_execute, wire_B_o_execute, wire_RW_o_execute;
     wire [1:0]regDest_signal_o_execute;
     wire [5:0]mem_signals_o_execute;
-    wire [2:0]wb_signals_o_execute;    
+    wire [2:0]wb_signals_o_execute;
+    wire halt_signal_o_execute;
 
     //execute_mem_stage
     wire [7-1:0] pc_o_mem;
@@ -116,6 +89,7 @@ module top_pipeline
     wire [5:0] mem_signals_o_mem;
     wire [2:0] wb_signals_o_mem;
     wire [NB_DATA-1:0] data_rb_o;
+    wire halt_signal_o_mem;
 
     // mem_wb_stage
     wire [NB_DATA-1:0] data_read_interface_o;
@@ -127,53 +101,22 @@ module top_pipeline
     wire reg_write_o_wb;
 	wire [NB_DATA-1:0] data_write_to_reg;
 
-    // debug_unit
-    wire select_debug_or_wireA;
-    wire [NB_REG-1:0] addr_reg_debug;
-    wire [NB_DATA-1:0] data_registers_debug;
-    wire [7-1:0] addr_mem_debug;
-	wire select_debug_or_alu_result;
-	wire [NB_DATA-1:0] data_mem_debug;
-    wire [6:0] data_pc_debug;
-
     // forward_unit
-    wire [1:0] forward_signal_regA;
-    wire [1:0] forward_signal_regB;
+    wire [1:0] forward_signal_regA, forward_signal_regB;
 
     // hazard_unit
-    wire stall;
-    wire pc_write_o;
-    wire if_dec_write_o;
+    wire stall, pc_write_o, if_dec_write_o;
 
     // decode_forward
-    wire decode_forward_A;
-    wire decode_forward_B;
+    wire decode_forward_A, decode_forward_B;
 
-    wire en_read_i;
+    
 
     assign data_registers_debug = data_ra_o_decode;
     assign data_mem_debug = data_read_interface_o;
     assign data_pc_debug = pc_decode;
 
-	assign finish_send = tx_done_tick;
-
-    /* señales paraver */
-    assign operation_o_paraver = alu_result_execute;
-	assign inmediate_o_paraver = wire_inmediate_o_decode;
-	assign data_a_o_paraver = data_ra_o_execute;
-    // assign dataInterfaceMEM_o_paraver = data_wr_to_mem_o_mem;
-    // assign dataWr_ex_mem_stage_o_paraver = data_read_interface_o;
-    // assign mem_signals_o_paraver = mem_signals_o_mem;
-    // assign mem_to_reg_signal_paraver = mem_to_reg_o_wb;
-    assign wire_A_paraver = wire_A_o_decode;
-    assign wire_B_paraver = wire_B_o_decode;
-    assign instruction_paraver = instruction_fetch;
-    assign wrote_paraver = ready_data_mem;
-    // assign select_debug_or_wireA_paraver = select_debug_or_wireA;
-    assign addr_mem_debug_paraver = addr_mem_debug;
-    assign en_pipeline_paraver = en_pipeline;
-
-
+ 
     decode_forward decode_forward
     (
         .wire_A_dec(wire_A_o_decode),
@@ -192,23 +135,20 @@ module top_pipeline
 		.wire_B_decode(wire_B_o_decode),
 		.dec_ex_register_b(wire_B_o_execute),
 		// .[NB_REG-1:0] writeReg_execute,
+		.halt_signal(halt_signal_decode),
 
-		//.[NB_OPCODE-1:0] op_code_i,
 		.EX_reg_write_i(1'b0), //vacio por ahora
-		//.beq_i, bne_i,
-		.EX_write_register_i(1'b0), //vacio por ahora
-		.halt_i(1'b0), //vacio por ahora
+		.EX_write_register_i(5'b0), //vacio por ahora
 
         .stall_o(stall),
 		.pc_write_o(pc_write_o), //detiene cargar la sig direccion
 		.if_dec_write_o(if_dec_write_o) //detiene cargar la instruccion en el registro IF_ID
-
     );
 
     forward_unit forward_unit
     (
-		.register_a_i(wire_A_o_decode),
-		.register_b_i(wire_B_o_decode),
+		.register_a_i(wire_A_o_execute),
+		.register_b_i(wire_B_o_execute),
 		.ex_mem_writeReg_i(writeReg_o_mem),
 		.mem_wb_writeReg_i(writeReg_o_wb),
 		.ex_mem_reg_write_i(wb_signals_o_mem[2]),
@@ -236,13 +176,16 @@ module top_pipeline
 		.alu_result_i(alu_result_o_mem),
 		.write_register_i(writeReg_o_mem),
         .wb_signals_i(wb_signals_o_mem),
+        .halt_signal_i(halt_signal_o_mem),
+
 		.pc_i(pc_o_mem),
 		.write_register_o(writeReg_o_wb),
 		.mem_data_read_o(mem_data_read_o_wb),
 		.alu_result_o(alu_result_o_wb),
 		.pc_o(pc_o_wb),
         .reg_write_o(reg_write_o_wb),
-        .mem_to_reg_o(mem_to_reg_o_wb)
+        .mem_to_reg_o(mem_to_reg_o_wb),
+        .halt_signal_o(halt_signal_o_wb)
     );
 
     mem_top mem_top
@@ -269,14 +212,17 @@ module top_pipeline
         .pc_i(pc_o_execute),
         .mem_signals_i(mem_signals_o_execute), 
         .wb_signals_i(wb_signals_o_execute), 
+        .halt_signal_i(halt_signal_o_execute),
+
 		.data_wr_to_mem_o(data_wr_to_mem_o_mem),
         .alu_result_o(alu_result_o_mem),
         .writeReg_o(writeReg_o_mem),  
         .pc_o(pc_o_mem),
         .mem_signals_o(mem_signals_o_mem),
-        .wb_signals_o(wb_signals_o_mem)
+        .wb_signals_o(wb_signals_o_mem),
+        .halt_signal_o(halt_signal_o_mem)
     );
-
+assign alu_result_o_mem_test = alu_result_o_mem;
     execute_top execute_top
     (
         .funct_i(funct_o_execute),		
@@ -299,8 +245,8 @@ module top_pipeline
         .mem_wb_data(data_write_to_reg),
 
         //test
-        .o_B_to_alu_paraver(o_B_to_alu_paraver),
-        .funct_for_alu_paraver(funct_for_alu_paraver)
+        .o_B_to_alu_paraver(),
+        .funct_for_alu_paraver()
     );
 
     decode_execute_stage decode_execute_stage
@@ -321,6 +267,7 @@ module top_pipeline
         .register_rw_i(wire_RW_o_decode),
         .mem_signals_i(mem_signals_decode),
         .wb_signals_i(wb_signals_decode),
+        .halt_signal_i(halt_signal_decode),
 
 		.data_ra_o(data_ra_o_execute),
 		.data_rb_o(data_rb_o_execute),
@@ -334,7 +281,8 @@ module top_pipeline
         .register_b_o(wire_B_o_execute),
         .register_rw_o(wire_RW_o_execute),
         .mem_signals_o(mem_signals_o_execute),
-        .wb_signals_o(wb_signals_o_execute)
+        .wb_signals_o(wb_signals_o_execute),
+        .halt_signal_o(halt_signal_o_execute)
     );
 
     decode_top decode_top
@@ -377,7 +325,8 @@ module top_pipeline
 		.address_jump(address_jump),
 		.address_branch(address_branch),
 		.address_register(address_register),
-		.pc_src(pc_src)
+		.pc_src(pc_src),
+        .halt_signal(halt_signal_decode)
     );
 
 	fetch_decode_stage fetch_decode_stage
@@ -395,10 +344,10 @@ module top_pipeline
 		.clock_i(clock),
 		.reset_i(reset),		
 		.enable_i(en_pipeline && pc_write_o),
-		.en_read_i(en_read_i), 
-		.en_write_i(ready_data_mem),
+		.en_read_i(en_read_inst), 
+		.en_write_i(ready_instr_to_write),
         .addr_i_write(o_dir_mem_write),
-        .data_i(o_data_mem),
+        .data_i(data_inst_to_write),
         .pc_branch_or_jump(pc_branch_or_jump),
 		.address_jump(address_jump),
 		.address_branch(address_branch),
@@ -408,58 +357,8 @@ module top_pipeline
 		.instruction_o(instruction_fetch)
 	);
 
-	debug_unit debug_unit
-	(
-        .clock_i(clock),
-        .reset_i(reset),
-        .tick(tick),
-	    .tx_rx(tx_rx),
-	    .select_debug_or_wireA(select_debug_or_wireA),
-	    .addr_reg_debug(addr_reg_debug),
-	    .data_registers_debug(data_registers_debug),
 
-        .addr_mem_debug(addr_mem_debug),
-	    .select_debug_or_alu_result(select_debug_or_alu_result),
-	    .data_mem_debug(data_mem_debug),
-
-        .data_pc_debug(data_pc_debug),
-    
-        .state_paraver(state_paraver),
-        .count_paraver(count_paraver),
-        .data_to_send_paraver(data_to_send_paraver), 
-        .en_send_registers_paraver(en_send_registers_paraver), 
-        .tx_done_paraver(tx_done_paraver), 
-        .count_send_bytes_paraver(count_send_bytes_paraver), 
-
-        .debug_out(debug_out), 
-	    .o_data_mem(o_data_mem),
-	    .write_to_register(ready_data_mem),
-	    .o_dir_wr_mem(o_dir_mem_write),
-        .en_pipeline_o(en_pipeline),
-        .en_read_mem(en_read_i)
-	);
-
-    // ______________________ BRG ____________ //
-    BaudRateGenerator myBRG (
-        .tick   (tick),
-        .clock  (clock),
-        .reset  (reset)
-    );
-    
-   // ______________________ Tx ____________ //
-    tx_uart mytx_uart(
-        .s_tick(tick), 
-        .tx(tx_rx),							// bit salida hacia rx
-        .read_tx(read_tx),					// habilitado para leer
-        .tx_done_tick(tx_done_tick),                                     // 1 cuando termino de enviar
-        .tx_start(empty),												// 1 cuando comienza a transmitir
-        .din(din),							// dato a leer
-        .clock(clock),
-        .reset(reset)
-    );
-
-    // assign o_data_mem_paraver = o_data_mem;
-    assign o_dir_wr_mem_paraver = o_dir_mem_write;
+    assign halt_signal_decode_debug = halt_signal_decode;
 
 endmodule
 

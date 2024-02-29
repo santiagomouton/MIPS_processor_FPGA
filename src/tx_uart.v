@@ -14,7 +14,8 @@ module tx_uart
     input   wire                clock,
     input   wire                reset,
     output  wire                tx,   
-    output  reg                 tx_done_tick
+    output  reg                 tx_done_tick,
+    output wire [NB_STATE -1:0]state          
 );
 
     // contador de tick
@@ -34,8 +35,7 @@ module tx_uart
         STATE_STOP  = 4'b1000;
 
     reg [NB_STATE - 1:0] current_state, next_state;
-    
-    
+    assign state = current_state;
     /**
         Logica de cambio de estado
     **/
@@ -61,26 +61,24 @@ module tx_uart
          next_state         = current_state;
          count_data_next    = count_data_reg;
          count_ticks_next   = count_ticks_reg;
-         tx_done_tick       = 0;
+         tx_done_tick       = 1'b0;
          tx_next            = tx_reg;
          din_next           = din_reg;
 
          case (current_state)
             STATE_IDLE : begin
                 tx_next = 1'b1;             // bit de conexion activa
-                case(tx_start)
-                    1'b1:
-                        begin
-                            din_next            = din;
-                            count_ticks_next    = 4'b0;
-                            next_state          = STATE_START;
-                        end
-                    default:
-                        begin
-                            next_state = STATE_IDLE;
-                            tx_done_tick = 1'b1;
-                        end    
-                endcase
+                tx_done_tick = 1'b1;
+                if(tx_start)
+                    begin
+                        din_next            = din;
+                        count_ticks_next    = 4'b0;
+                        next_state          = STATE_START;
+                    end
+/*                 else
+                    begin
+                        tx_done_tick = 1'b1;
+                    end */    
             end
             // -------------------------------------------------------------------------- //
             STATE_START : begin
@@ -114,17 +112,22 @@ module tx_uart
             // -------------------------------------------------------------------------- //
             STATE_STOP : begin
                 tx_next = 1'b1;
-                if (count_ticks_reg == DATA_TICKS) begin
-                    tx_done_tick    = 1'b1;    
-                    next_state      = STATE_IDLE;                    
+                if (s_tick) begin
+                    if (count_ticks_reg == DATA_TICKS) begin
+                        next_state      = STATE_IDLE;                    
+                        // tx_done_tick    = 1'b1; 
+                    end
+                    else
+                        begin
+                            count_ticks_next = count_ticks_reg + 1;
+                            // tx_done_tick       = 1'b0;
+                        end
                 end
-                else
-                    count_ticks_next = count_ticks_reg + 1;
             end
         // -----------------------------------------------------------------------// 
-            default: begin
+/*             default: begin
                 next_state = STATE_IDLE;
-            end
+            end */
         endcase
     end
 
