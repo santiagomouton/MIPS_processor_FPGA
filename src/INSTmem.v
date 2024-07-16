@@ -28,9 +28,10 @@ module INSTmem
 			if (reset_i)
 				for (i = 0 ; i < N_ELEMENTS ; i = i + 1)
 					memory_instruction[i] <= 0;
-			else if (en_write_i)										
-				memory_instruction[addr_i_write] <= data_i;
-			else if (en_read_i)
+			else if (en_write_i)
+					// memory_instruction[addr_i_write] <= 32'h01020400;
+					memory_instruction[addr_i_write] <= data_i;
+			else if (en_read_i)		
 				data_reg <= memory_instruction[addr_i_read];			
 			else 
 				data_reg <= data_reg;							

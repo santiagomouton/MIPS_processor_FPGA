@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module top_pipeline
+module top_pipeline_board
 	#(		
 		parameter NB_DATA = 32,
 		parameter NB_OPCODE = 6,
@@ -15,64 +15,73 @@ module top_pipeline
         parameter NB_ADDR = 7		
 	)
 	(
-		input wire clock,
+		input wire clk_in,
 		input wire reset,
+        input wire receiving,
+        output wire debug_out,
 
-        input wire select_debug_or_wireA,
-        input wire [NB_REG-1:0] addr_reg_debug,
-        output wire [NB_DATA-1:0] data_registers_debug,
-
-        input wire [7-1:0] addr_mem_debug,
-        input wire select_debug_or_alu_result,
-        output wire [NB_DATA-1:0] data_mem_debug,
-
-        output wire [7-1:0] data_pc_debug,
-
-        input wire [NB_DATA-1:0]data_inst_to_write,
-        input wire ready_instr_to_write,
-        input wire [6:0]o_dir_mem_write,
-
-        input wire en_pipeline,
-        input wire en_read_inst,
-        
-        /*      
+/*         output wire [12-1:0] state_paraver,
+        output wire [N_BITS-1:0] data_to_send_paraver,
+        output wire [7-1:0]o_dir_wr_mem_paraver,
+        output wire [NB_DATA-1:0] o_B_to_alu_paraver,
         output wire [6-1:0] funct_for_alu_paraver */
 
-        output wire halt_signal_o_wb,
-        output wire halt_signal_decode_debug,
-
-        output wire [NB_DATA-1:0] alu_result_o_mem_test
+        output wire state_Iddle,
+        output wire state_Receive_Instruction,
+        output reg state_Tx_data_to_computer,
+        output wire state_Continue,
+        output wire [7:0]dout_debug
 
 	);
-    
-	// wire [6:0]o_dir_mem_read;
 
-    wire [6:0] pc_fetch, pc_decode;
-    wire [NB_DATA-1:0] instruction_fetch, instruction_decode;
+
+	wire [7:0]  dout;
+	wire read_rx;
+	// wire [5 - 1:0]rx_state;
+
+    wire en_pipeline;
+	wire finish_rcv; 
+    wire ready_data_mem;
+	wire [NB_DATA-1:0]o_data_mem;
+	wire [6:0]o_dir_mem_write;
+	wire [6:0]o_dir_mem_read;
+
+    wire [6:0] pc_fetch;
+    wire [NB_DATA-1:0] instruction_fetch;
     
-	wire [5-1:0] wire_A_o_decode, wire_B_o_decode, wire_RW_o_decode;
+    wire [6:0] pc_decode;
+    wire [NB_DATA-1:0] instruction_decode;
+	wire [5-1:0] wire_A_o_decode;
+	wire [5-1:0] wire_B_o_decode;
+	wire [5-1:0] wire_RW_o_decode;
 	wire [NB_DATA-1:0] wire_inmediate_o_decode;
     wire [NB_OPCODE-1:0] opcode_o_decode;
     wire [5:0] funct_o_decode;
-    wire [1:0] regDest_signal_decode;
-    wire [NB_DATA-1:0] data_ra_o_decode, data_rb_o_decode;
+    wire [1:0]regDest_signal_decode;
+    wire [NB_DATA-1:0] data_ra_o_decode;
+    wire [NB_DATA-1:0] data_rb_o_decode;
     wire [5:0]mem_signals_decode;
     wire [2:0]wb_signals_decode;
     wire tipeI_signal_decode;
     wire halt_signal_decode;
 
     wire pc_branch_or_jump;
-    wire [7-1:0] address_jump, address_branch, address_register;
+    wire [7-1:0] address_jump;
+    wire [7-1:0] address_branch;
+    wire [7-1:0] address_register;
     wire [1:0]pc_src;
 
     //decode_execute_stage
-    wire [NB_DATA-1:0] data_ra_o_execute, data_rb_o_execute;
+    wire [NB_DATA-1:0] data_ra_o_execute;
+    wire [NB_DATA-1:0] data_rb_o_execute;
     wire [NB_DATA-1:0] inmediate_o_execute;
     wire [7-1:0] pc_o_execute;
     wire [5:0] funct_o_execute;
 	wire [5:0]operation_o_execute;
 	wire tipeI_o_execute;
-    wire [5-1:0] wire_A_o_execute, wire_B_o_execute, wire_RW_o_execute;
+    wire [5-1:0] wire_A_o_execute;
+    wire [5-1:0] wire_B_o_execute;
+    wire [5-1:0] wire_RW_o_execute;
     wire [1:0]regDest_signal_o_execute;
     wire [5:0]mem_signals_o_execute;
     wire [2:0]wb_signals_o_execute;
@@ -99,23 +108,69 @@ module top_pipeline
     wire [1:0] mem_to_reg_o_wb;
     wire reg_write_o_wb;
 	wire [NB_DATA-1:0] data_write_to_reg;
+    wire halt_signal_o_wb;
+
+    // debug_unit
+    wire select_debug_or_wireA;
+    wire [NB_REG-1:0] addr_reg_debug;
+    wire [NB_DATA-1:0] data_registers_debug;
+    wire [7-1:0] addr_mem_debug;
+	wire select_debug_or_alu_result;
+	wire [NB_DATA-1:0] data_mem_debug;
+    wire [6:0] data_pc_debug;
 
     // forward_unit
-    wire [1:0] forward_signal_regA, forward_signal_regB;
+    wire [1:0] forward_signal_regA;
+    wire [1:0] forward_signal_regB;
 
     // hazard_unit
-    wire stall, pc_write_o, if_dec_write_o;
+    wire stall;
+    wire pc_write_o;
+    wire if_dec_write_o;
 
     // decode_forward
-    wire decode_forward_A, decode_forward_B;
+    wire decode_forward_A;
+    wire decode_forward_B;
 
-    
+    wire en_read_i;
 
     assign data_registers_debug = data_ra_o_decode;
     assign data_mem_debug = data_read_interface_o;
     assign data_pc_debug = pc_decode;
 
+    wire clk_wiz_out;
+    wire locked;
+    wire clock;
+
+    clk_wiz_0 clock_wizard
+    (
+        // Clock out ports
+        .clk_out1(clk_wiz_out),     // output clk_out1
+        // Status and control signals
+        .reset(reset),          // input reset
+        .locked(locked),        // output locked
+        // Clock in ports
+        .clk_in1(clk_in)       // input clk_in1
+    );
+    assign clock = clk_wiz_out & locked;
  
+
+
+    wire [12-1:0] state_paraver;
+    assign state_Iddle               = state_paraver[0];
+    assign state_Receive_Instruction = state_paraver[1];
+    // assign state_Tx_data_to_computer = state_paraver[5];
+    assign state_Continue            = state_paraver[4];
+
+    always @(posedge clock) begin
+        if (reset) begin
+            state_Tx_data_to_computer <= 1'b0;
+        end
+        else if (halt_signal_decode) begin
+            state_Tx_data_to_computer <= 1'b1;
+        end
+    end
+
     decode_forward decode_forward
     (
         .wire_A_dec(wire_A_o_decode),
@@ -197,12 +252,8 @@ module top_pipeline
 		.select_debug_or_alu_result(select_debug_or_alu_result),
 		.data_wr_to_mem(data_wr_to_mem_o_mem),
 		.mem_signals_i(mem_signals_o_mem),
-		.data_read_interface_o(data_read_interface_o),
-		.data_wr_to_mem_interface_o_paraver()
+		.data_read_interface_o(data_read_interface_o)
     );
-
-    // assign alu_result_o_mem_test = {25'b0, mem_signals_o_mem};
-    assign alu_result_o_mem_test = instruction_fetch;
 
     ex_mem_stage ex_mem_stage
     (
@@ -329,8 +380,7 @@ module top_pipeline
 		.address_branch(address_branch),
 		.address_register(address_register),
 		.pc_src(pc_src),
-        .halt_signal(halt_signal_decode),
-        .wire_inmediate_paraver()
+        .halt_signal(halt_signal_decode)
     );
 
 	fetch_decode_stage fetch_decode_stage
@@ -348,10 +398,10 @@ module top_pipeline
 		.clock_i(clock),
 		.reset_i(reset),		
 		.enable_i(en_pipeline && pc_write_o),
-		.en_read_i(en_read_inst), 
-		.en_write_i(ready_instr_to_write),
+		.en_read_i(en_read_i), 
+		.en_write_i(ready_data_mem),
         .addr_i_write(o_dir_mem_write),
-        .data_i(data_inst_to_write),
+        .data_i(o_data_mem),
         .pc_branch_or_jump(pc_branch_or_jump),
 		.address_jump(address_jump),
 		.address_branch(address_branch),
@@ -361,8 +411,43 @@ module top_pipeline
 		.instruction_o(instruction_fetch)
 	);
 
+	debug_unit debug_unit
+	(
+        .clock_i(clock),
+        .reset_i(reset),
+        .halt_signal(halt_signal_o_wb),
+	    .tx_rx(receiving),
+	    .select_debug_or_wireA(select_debug_or_wireA),
+	    .addr_reg_debug(addr_reg_debug),
+	    .data_registers_debug(data_registers_debug),
 
-    assign halt_signal_decode_debug = halt_signal_decode;
+        .addr_mem_debug(addr_mem_debug),
+	    .select_debug_or_alu_result(select_debug_or_alu_result),
+	    .data_mem_debug(data_mem_debug),
+
+        .data_pc_debug(data_pc_debug),
+    
+        .state_paraver(state_paraver),
+        .count_paraver(),
+        .data_to_send_paraver(), 
+        .en_send_registers_paraver(), 
+        .tx_done_paraver(), 
+        .count_send_bytes_paraver(),
+
+        .debug_out(debug_out), 
+	    .o_data_mem(o_data_mem),
+	    .write_to_register(ready_data_mem),
+	    .o_dir_wr_mem(o_dir_mem_write),
+        .en_pipeline_o(en_pipeline),
+        .en_read_mem(en_read_i),
+        
+        .instruction_decode(instruction_decode),
+        .dout_debug(dout_debug)
+	);
+    
+
+    // assign o_data_mem_paraver = o_data_mem;
+    // assign o_dir_wr_mem_paraver = o_dir_mem_write;
 
 endmodule
 

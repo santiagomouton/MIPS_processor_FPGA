@@ -58,14 +58,14 @@ module tx_uart
         end
         
     always @(*) begin: state_logic
-         next_state         = current_state;
-         count_data_next    = count_data_reg;
-         count_ticks_next   = count_ticks_reg;
-         tx_done_tick       = 1'b0;
-         tx_next            = tx_reg;
-         din_next           = din_reg;
+        next_state         = current_state;
+        count_data_next    = count_data_reg;
+        count_ticks_next   = count_ticks_reg;
+        tx_done_tick       = 1'b0;
+        tx_next            = tx_reg;
+        din_next           = din_reg;
 
-         case (current_state)
+        case (current_state)
             STATE_IDLE : begin
                 tx_next = 1'b1;             // bit de conexion activa
                 tx_done_tick = 1'b1;
@@ -128,6 +128,7 @@ module tx_uart
 /*             default: begin
                 next_state = STATE_IDLE;
             end */
+            default : next_state      = STATE_IDLE;
         endcase
     end
 

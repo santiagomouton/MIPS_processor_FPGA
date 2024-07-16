@@ -11,7 +11,7 @@ module debug_unit
     parameter NB_STATE   = 12,
     parameter N_COUNT	 = 10,
     parameter N_REGISTER = 32,
-    parameter N_MEMORY_DATA = 128,
+    parameter N_MEMORY_DATA = 127,
     parameter NB_ADDR = 7,
     parameter RX_DATA   = 8                        // input bits rx
 ) 
@@ -28,9 +28,11 @@ module debug_unit
     output reg en_pipeline_o,
 	output reg en_read_mem,
 
+
+	output wire [N_BITS-1:0] data_to_send_paraver,
 	
 	// in/out para obtener datos de registros
-	output wire select_debug_or_wireA,
+	output reg select_debug_or_wireA,
 	output wire [NB_REG-1:0] addr_reg_debug,
 	input  wire [NB_DATA-1:0] data_registers_debug,
 	// in/out para obtener datos de memoria
@@ -42,7 +44,12 @@ module debug_unit
 
 	output wire [NB_STATE-1:0] state_paraver,
 	// output wire [5 - 1:0] state_paraver,
-	input wire [NB_DATA-1:0] alu_result_o_mem_test
+	output wire [2:0] count_paraver,
+	output wire en_send_registers_paraver,
+	output wire tx_done_paraver,
+	output wire [2:0] count_send_bytes_paraver,
+
+	output wire read_rx_paraver
 );
 
 	localparam HALT = 32'b11111100000000000000000000000000;
@@ -53,7 +60,7 @@ module debug_unit
 	// reg rcv_instr_complete;
 	reg [NB_STATE-1:0] state, next_state;
 	// reg en_rcv_instr;
-	// reg en_send_data_pc;
+	reg en_send_data_pc;
 
 	wire read_rx;
 	wire [7:0] dout;
@@ -62,6 +69,8 @@ module debug_unit
 
 
 	assign state_paraver = state;
+	assign count_paraver = count;
+	assign read_rx_paraver = read_rx;
 
 
 	localparam 	[NB_STATE-1:0]   Iddle			    		=  12'b000000000001
@@ -84,18 +93,20 @@ module debug_unit
 	reg write_to_register_reg;
     reg finish_rcv_reg, finish_rcv_next;
 
-
-reg [N_BITS-1:0] data_to_send, data_to_send_next;
+reg [2:0] count_send_bytes;
+reg [N_BITS-1:0] data_to_send;
+reg tx_start;
 reg	en_send_pc;
 
-	reg tx_start, tx_start_next;
-	reg [2:0] count_send_bytes, count_send_bytes_next;
+assign data_to_send_paraver = data_to_send;
+assign tx_done_paraver = tx_done;
+assign count_send_bytes_paraver = count_send_bytes;
+
+
+	reg tx_start_next;
+	reg count_send_bytes_next;
 	reg [NB_REG-1:0] addr_reg_debug_next, addr_reg_debug_reg; 
-	reg select_debug_or_wireA_reg, select_debug_or_wireA_next;
-	reg [NB_ADDR-1:0] addr_mem_debug_next, addr_mem_debug_reg; 
 	reg	en_send_registers_reg, en_send_registers_next;
-	reg	en_send_memory_reg, en_send_memory_next;
-	reg	en_send_pc_reg, en_send_pc_next;
 	reg	all_data_sent_reg, all_data_sent_next;
 
 	always @(posedge clock_i) 
@@ -109,16 +120,11 @@ reg	en_send_pc;
 				  o_data_mem_reg		<= 8'b00000000;
 				  finish_rcv_reg		<= 1'b0;
 
-				//   tx_start				<= 1'b0;
+				  tx_start				<= 1'b0;
 				  count_send_bytes  	<= 3'b000;
 				  addr_reg_debug_reg	<= 5'b00000;
-				  select_debug_or_wireA_reg <= 1'b0;
-				  addr_mem_debug_reg	<= {NB_ADDR{1'b0}};
 				  en_send_registers_reg <= 1'b0;
-				  en_send_memory_reg	<= 1'b0;
-				  en_send_pc_reg		<= 1'b0;
 				  all_data_sent_reg		<= 1'b0;
-				//   data_to_send			<= 8'b00000000;
 			  end						
 			else
 			  begin
@@ -129,19 +135,114 @@ reg	en_send_pc;
 				  o_data_mem_reg		<= o_data_mem_next;
 				  finish_rcv_reg		<= finish_rcv_next;
 
-				//   tx_start		 		<= tx_start_next;
+				  tx_start		 		<= tx_start_next;
 				  count_send_bytes  	<= count_send_bytes_next;
 				  addr_reg_debug_reg	<= addr_reg_debug_next;
-				  select_debug_or_wireA_reg <= select_debug_or_wireA_next;
-				  addr_mem_debug_reg	<= addr_mem_debug_next;
 				  en_send_registers_reg	<= en_send_registers_next;
-				  en_send_memory_reg	<= en_send_memory_next;
-				  en_send_pc_reg		<= en_send_pc_next;
 				  all_data_sent_reg		<= all_data_sent_next;
-				//   data_to_send			<= data_to_send_next;
               end
 		end
 
+
+ 
+  	always @(posedge clock_i)
+		begin
+			if (reset_i)
+				begin
+					en_send_registers <= 1'b0;
+					en_send_memory    <= 1'b0;
+					en_send_pc    	  <= 1'b0;
+					count_send_bytes  <= 3'b000;
+					addr_reg_debug      <= 5'b0;
+					addr_mem_debug 		<= 7'b0;
+					all_data_sent 		<= 1'b0;
+					tx_start 			<= 1'b0;
+				end	
+			else
+				begin
+					if (en_send_data_pc)
+						begin
+							if (en_send_registers)
+							begin
+								if (tx_done) begin
+									if (count_send_bytes == N_BYTES) begin
+										count_send_bytes <= 3'b000;
+										if (addr_reg_debug == N_REGISTER-1) begin
+											addr_reg_debug <= 5'b0;
+											en_send_registers <= 1'b0;
+											en_send_memory <= 1'b1;
+										end
+										else begin
+											addr_reg_debug <= addr_reg_debug + 1;
+										end
+									end else begin
+										data_to_send <= data_registers_debug[count_send_bytes*N_BITS+:N_BITS];
+										tx_start <= 1'b1;
+										count_send_bytes <= count_send_bytes + 1;
+									end
+								end
+								else begin
+									tx_start <= 1'b0;
+								end
+
+							end
+							else if(en_send_memory) begin
+								if (tx_done) begin
+									if (count_send_bytes == N_BYTES) begin
+										count_send_bytes  <= 3'b000;
+										if (addr_mem_debug == N_MEMORY_DATA-1) begin
+											addr_mem_debug <= 7'b0;
+											en_send_memory 	  <= 1'b0;
+											en_send_pc	 	  <= 1'b1;
+										end
+										else begin
+											addr_mem_debug <= addr_mem_debug + 1;
+										end
+									end else begin
+										data_to_send <= data_mem_debug[count_send_bytes*N_BITS+:N_BITS];
+										tx_start <= 1'b1;
+										count_send_bytes <= count_send_bytes + 1;
+									end
+								end
+								else begin
+									tx_start <= 1'b0;
+								end
+
+							end
+							else if(en_send_pc) begin
+								if (tx_done) begin
+									if (count_send_bytes == 1) begin
+										count_send_bytes  <= 3'b000;
+										en_send_pc	   <= 1'b0;
+										all_data_sent <= 1'b1;
+									end else begin
+										data_to_send <= data_pc_debug;
+										tx_start <= 1'b1;
+										count_send_bytes <= count_send_bytes + 1;
+									end
+								end
+								else begin
+									tx_start <= 1'b0;
+								end
+
+							end
+							else begin
+								tx_start <= 1'b0;
+								en_send_registers <= 1'b1;
+							end
+						end		    			
+					else
+						begin
+							en_send_registers <= 1'b0;
+							en_send_memory    <= 1'b0;
+							addr_reg_debug    <= 5'b0;
+							addr_mem_debug 	  <= 7'b0;
+							all_data_sent 	  <= 1'b0;
+							tx_start 		  <= 1'b0;
+							count_send_bytes  <= 3'b000;
+						end	  
+				end
+		end
 
   /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
@@ -156,25 +257,19 @@ reg	en_send_pc;
 			write_to_register_reg = 1'b0;
 			en_pipeline_reg = 1'b0;
 			en_read_mem = 1'b0;
-			// en_send_data_pc = 1'b0;
+			en_send_data_pc = 1'b0;
 
-			select_debug_or_wireA_next = select_debug_or_wireA_reg;
+			select_debug_or_wireA = 1'b0;
 			select_debug_or_alu_result = 1'b0;
 
 			count_next 		= count_reg;
 			o_data_mem_next = o_data_mem_reg;
 
 			tx_start_next = 1'b0;
-			tx_start = 1'b0;
-			count_send_bytes_next 	= count_send_bytes;
-			addr_reg_debug_next 	= addr_reg_debug_reg;
-			addr_mem_debug_next 	= addr_mem_debug_reg;
-			en_send_registers_next 	= en_send_registers_reg;
-			en_send_memory_next 	= en_send_memory_reg;
-			en_send_pc_next 		= en_send_pc_reg;
-			all_data_sent_next 		= all_data_sent_reg;
-			// data_to_send_next 		= data_to_send;
-			data_to_send			= 8'b00000000;
+			count_send_bytes_next = count_send_bytes;
+			addr_reg_debug_next = addr_reg_debug_reg;
+			en_send_registers_next = en_send_registers_reg;
+			all_data_sent_next = all_data_sent_reg;
 
 			case (state)
 				Iddle:
@@ -183,8 +278,6 @@ reg	en_send_pc;
 						o_dir_wr_mem_next 	= 7'b0000000;
 						all_data_sent_next 	= 1'b0;
 						if(read_rx)
-							tx_start = 1'b1;
-							data_to_send = dout;
 							begin
 								case(dout)
 									8'b00000001:next_state = Receive_Instruction;
@@ -197,17 +290,12 @@ reg	en_send_pc;
 									"c":next_state = Continue;
 									"r":next_state = Restart;
 									"f":next_state = Flush; */
-									default:	next_state = Iddle;
 								endcase
 							end
 					end
 
 				Receive_Instruction:
 					begin
-						/* if (tx_done) begin
-							tx_start = 1'b0;
-						end */
-
 						if (count_reg == 3'b100) 
 							begin
 								if (o_data_mem_reg == HALT) begin
@@ -219,10 +307,6 @@ reg	en_send_pc;
 						else if (read_rx) 
 							begin
 								o_data_mem_next = {dout, o_data_mem_reg[NB_DATA    -1:8]};
-								
-								tx_start = 1'b1;
-								data_to_send = dout;
-								
 								count_next = count_reg + 1;
 							end					      
 					end
@@ -234,9 +318,8 @@ reg	en_send_pc;
 						o_dir_wr_mem_next = o_dir_wr_mem_reg + 1;
 						if (finish_rcv_reg)
 							next_state = Iddle;												
-						else begin
-							next_state  = Receive_Instruction;
-						end	
+						else
+							next_state  = Receive_Instruction;	
 					end
 
 				Step_mode:
@@ -245,7 +328,7 @@ reg	en_send_pc;
 						if (halt_signal)
 							begin
 								en_pipeline_reg = 1'b0;
-								// en_send_data_pc = 1'b1;
+								en_send_data_pc = 1'b1;
 							end	
 						else 
 							begin
@@ -253,9 +336,6 @@ reg	en_send_pc;
 							end
 						next_state = Tx_data_to_computer;
 						en_send_registers_next = 1'b1;
-						select_debug_or_wireA_next = 1'b1;
-
-						addr_reg_debug_next = 5'b00111;
 					end
 
 				Continue:
@@ -274,10 +354,9 @@ reg	en_send_pc;
 						if (halt_signal)
 							begin
 								en_pipeline_reg = 1'b0;
-								// en_send_data_pc = 1'b1;
+								en_send_data_pc = 1'b1;
 								en_send_registers_next = 1'b1;
 								next_state = Tx_data_to_computer;
-								select_debug_or_wireA_next = 1'b1;
 							end
 					end
 
@@ -285,80 +364,35 @@ reg	en_send_pc;
 					begin				
 						// en_pipeline_reg = 1'b0;
 						en_read_mem = 1'b0;
-						// en_send_data_pc = 1'b1;
+						en_send_data_pc = 1'b1;
 
-						select_debug_or_wireA_next = 1'b1;
+						select_debug_or_wireA = 1'b1;
 						select_debug_or_alu_result = 1'b1;
 
 						if (en_send_registers_reg) begin
 							if (tx_done) begin
-								if (count_send_bytes == (N_BYTES)) begin
+								if (count_send_bytes == N_BYTES) begin
 									count_send_bytes_next = 3'b000;
-									// tx_start = 1'b0;
-									// if (addr_reg_debug_reg == (N_REGISTER-1)) begin
-									if (addr_reg_debug_reg == 5'b00111) begin
+									if (addr_reg_debug_reg == N_REGISTER-1) begin
 										addr_reg_debug_next = 5'b00000;
 										en_send_registers_next = 1'b0;
-										en_send_memory_next = 1'b1;
-
-										// all_data_sent_next = 1'b1;
+										all_data_sent_next = 1'b1;
+										// en_send_memory = 1'b1;
 									end
 									else begin
 										addr_reg_debug_next = addr_reg_debug_reg + 1;
 									end
 								end else begin
 									tx_start_next = 1'b1;
-									tx_start = 1'b1;
-									data_to_send = {8'b0};
-									// data_to_send = data_registers_debug[count_send_bytes*(N_BITS-1)+:(N_BITS-1)];
-									// data_to_send_next = data_registers_debug[count_send_bytes*(N_BITS-1)+:(N_BITS-1)];
-									// data_to_send = alu_result_o_mem_test[count_send_bytes*(N_BITS-1)+:(N_BITS-1)];
-									count_send_bytes_next = count_send_bytes + 1;
-								end
-							end
-							// else
-							// 	tx_start = 1'b0;
-						end
-
- 						else if (en_send_memory_reg) begin
-							if (tx_done) begin
-								if (count_send_bytes == (N_BYTES)) begin
-									count_send_bytes_next = 3'b000;
-									// tx_start = 1'b0;
-									// if (addr_mem_debug_reg == (N_MEMORY_DATA-1)) begin
-										addr_mem_debug_next = {NB_ADDR{1'b0}};
-										en_send_memory_next = 1'b0;
-										en_send_pc_next = 1'b1;
-
-										all_data_sent_next = 1'b1;
-									/*end 
-									else begin
-										addr_mem_debug_next = addr_mem_debug_reg + 1;
-									end */
-								end else begin
-									tx_start = 1'b1;
-									 data_to_send = alu_result_o_mem_test[count_send_bytes*(N_BITS-1)+:(N_BITS-1)];
-									//data_to_send_next = data_mem_debug[count_send_bytes*(N_BITS-1)+:(N_BITS-1)];
+									data_to_send = data_registers_debug[count_send_bytes*N_BITS+:N_BITS];
 									count_send_bytes_next = count_send_bytes + 1;
 								end
 							end
 						end
-/*
-						else if (en_send_pc_reg) begin
-							if (tx_done) begin
-								tx_start = 1'b1;
-								data_to_send_next = {1'b0, data_pc_debug};
 
-								en_send_pc_next = 1'b0;
-								all_data_sent_next = 1'b1;
-							end
-						end */
 
 						if (all_data_sent_reg)
-						begin
-							next_state = Iddle;
-							select_debug_or_wireA_next = 1'b0;
-						end
+							next_state = Iddle;	
 					end	
 
 				Restart:
@@ -382,8 +416,6 @@ reg	en_send_pc;
 
 	assign addr_reg_debug = addr_reg_debug_reg;
 
-	assign select_debug_or_wireA = select_debug_or_wireA_reg;
-
 
     // ______________________ BRG ____________ //
     BaudRateGenerator myBRG (
@@ -391,8 +423,7 @@ reg	en_send_pc;
         .clock  (clock_i),
         .reset  (reset_i)
     );
-// wire tx_start_next_wire;
-// assign tx_start_next_wire = tx_start;
+
    	//______________________ Tx ____________ //
     tx_uart mytx_uart(
         .s_tick(tick), 

@@ -17,7 +17,7 @@ module BaudRateGenerator
     input wire reset
 );    
     // counter ticks
-    reg [7: 0]  counTicks;
+    reg [8: 0]  counTicks;
     
     /**
     * Lista de Sensibilidades : 

@@ -133,7 +133,7 @@ module rx_uart
                 end
             end
         // -----------------------------------------------------------------------// 
-            // default: next_state = STATE_IDLE;
+            default : next_state = STATE_IDLE;
         endcase
     end
 

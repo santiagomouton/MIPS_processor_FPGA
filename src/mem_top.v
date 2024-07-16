@@ -15,7 +15,8 @@ module mem_top
 		input wire [NB_DATA-1:0] data_wr_to_mem,
 		input wire [6-1:0] mem_signals_i,
 
-		output wire [NB_DATA-1:0] data_read_interface_o
+		output wire [NB_DATA-1:0] data_read_interface_o,
+		output wire [NB_DATA-1:0] data_wr_to_mem_interface_o_paraver
 	);		
     
     wire [NB_DATA-1:0] DATAmem_o;
@@ -59,6 +60,6 @@ module mem_top
    		.data_write_o(data_wr_to_mem_interface_o),
    		.data_read_o(data_read_interface_o)
     );
-
+	assign data_wr_to_mem_interface_o_paraver = data_wr_to_mem_interface_o;
 
 endmodule

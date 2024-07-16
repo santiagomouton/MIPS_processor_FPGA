@@ -45,7 +45,8 @@ module decode_top
 		output wire [7-1:0] address_branch,
 		output wire [7-1:0] address_register,
 		output wire [1:0] pc_src,
-		output wire halt_signal
+		output wire halt_signal,
+		output wire [31:0] wire_inmediate_paraver
 	);
 
 	wire [NB_REG-1:0] addr_A_out;
@@ -139,6 +140,7 @@ module decode_top
 		.direction(wire_direction),
 		.wire_dest(wireRW_o)
 	);
+	assign wire_inmediate_paraver = {16'b0, wire_inmediate};
 
 	control_unit control_unit
 	(
