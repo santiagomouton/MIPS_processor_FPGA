@@ -1,0 +1,6 @@
+addi R1, R9, 2
+addi R4, R9, 4
+addi R7, R9, 10
+addi R0, R9, 6
+addi R5, R9, 7
+halt

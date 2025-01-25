@@ -16,6 +16,6 @@ module branch
 	);
 
 	assign is_equal = (data_ra_branch == data_rb_branch) ? 1'b1 : 1'b0;
-	assign branch_address_o = pc + inmediate;	
+	assign branch_address_o = pc + inmediate; //suma de un 32bits y otro de 7 bits OJO!!	
 
 endmodule

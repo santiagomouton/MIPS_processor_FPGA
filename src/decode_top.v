@@ -131,7 +131,7 @@ module decode_top
 	distributor distributor
 	(
 		.instruction(instruction_i),
-		.regDst(1'b0),
+		// .regDst(1'b0),
 		.operation(operation),
 		.funct(funct),
 		.inmediate(wire_inmediate),

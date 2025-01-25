@@ -3,7 +3,8 @@
 
 module BaudRateGenerator
 #(
-    parameter   CLOCK_FREQ       = 25000000,                        //25Mhz
+    // parameter   CLOCK_FREQ       = 25000000,                        //25Mhz
+    parameter   CLOCK_FREQ       = 10000000,                        //10Mhz
     // parameter   BAUD_RATE        = 19200,                           //19,2Khz
     parameter   BAUD_RATE        = 9600,                           //9,6Khz
     parameter   DIVISION         = 16,

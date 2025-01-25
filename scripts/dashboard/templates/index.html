@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UART Data Viewer</title>
+    <link rel="stylesheet" href="{{ url_for( 'static', filename='style.css') }}">
+</head>
+<body>
+    <h1>UART Data Viewer</h1>
+
+    <div>
+        <h3>Enviar Comando</h3>
+        <input type="text" id="command-input" placeholder="Escribe tu comando aquí" />
+        <button onclick="sendCommand()">Enviar</button>
+    </div>
+    <div id="response-container">
+        <h4>Respuesta del Servidor:</h4>
+        <pre id="server-response"></pre>
+    </div>
+
+     <!-- Cargar archivo .hex -->
+    <div>
+        <h2>Cargar Archivo .hex</h2>
+        <form id="upload-form">
+            <input type="file" id="file-input" accept=".hex" />
+            <button type="button" onclick="uploadFile()">Subir Archivo</button>
+        </form>
+    </div>
+
+    <!-- Resultados -->
+    <div id="upload-result">
+        <h3>Resultado de la Carga:</h3>
+        <pre id="file-content">No se ha cargado ningún archivo aún.</pre>
+    </div>
+
+    <div class="table-container">
+
+        <!-- Program Counter -->
+        <div>
+            <h2>Program Counter</h2>
+            <p id="pc">PC: 00000000</p>
+        </div>
+        
+        <!-- Register Stack -->
+        <div>
+            <h2>Stack de Registros</h2>
+            <table id="registers">
+                <thead>
+                    <tr>
+                        <th>Registro  </th>
+                        <th>Valor     </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Datos dinámicos -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Memory Stack -->
+        <div>
+            <h2>Stack de Memoria</h2>
+            <table id="memory">
+                <thead>
+                    <tr>
+                        <th>Posición  </th>
+                        <th>Valor     </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Datos dinámicos -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Señales de control -->
+        <div>
+            <h2>Señales de control</h2>
+            <table id="signals">
+                <thead>
+                    <tr>
+                        <th>Etapa  </th>
+                        <th>tipeI  </th>
+                        <th>shamt  </th>
+                        <th>beq  </th>
+                        <th>bne  </th>
+                        <th>jump  </th>
+                        <th>pc_src  </th>
+                        <th>regDest_signal  </th>
+                        <th>mem_signals[2:0]  </th>
+                        <th>mem_signals[4:3]  </th>
+                        <th>mem_signals[5]  </th>
+                        <th>wb_signals[1:0]  </th>
+                        <th>wb_signals[2]  </th>
+                        <th>halt_signal  </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Datos dinámicos -->
+                    <tr>
+                        <td>IF</td>
+                    </tr>
+                    <tr>
+                        <td>ID</td>
+                    </tr>
+                    <tr>
+                        <td>EX</td>
+                    </tr>
+                    <tr>
+                        <td>MEM</td>
+                    </tr>
+                    <tr>
+                        <td>WB</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <script src="../static/script.js"></script>
+    </div>
+
+</body>
+</html>

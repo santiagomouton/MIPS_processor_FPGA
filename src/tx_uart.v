@@ -83,6 +83,7 @@ module tx_uart
             // -------------------------------------------------------------------------- //
             STATE_START : begin
                 tx_next = 1'b0;             // bit de start
+                tx_done_tick = 1'b0;
                 if (s_tick) begin                    
                     if (count_ticks_reg == DATA_TICKS) begin
                         count_ticks_next    = 4'b0;
@@ -96,6 +97,7 @@ module tx_uart
             // -------------------------------------------------------------------------- // 
             STATE_DATA : begin
                 tx_next = din_reg[count_data_reg];
+                tx_done_tick = 1'b0;
                 if (s_tick) begin
                     if (count_ticks_reg == DATA_TICKS) begin
                         count_ticks_next     = 4'b0;
@@ -111,6 +113,7 @@ module tx_uart
             end
             // -------------------------------------------------------------------------- //
             STATE_STOP : begin
+                tx_done_tick = 1'b0;
                 tx_next = 1'b1;
                 if (s_tick) begin
                     if (count_ticks_reg == DATA_TICKS) begin

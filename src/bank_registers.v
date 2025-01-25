@@ -45,7 +45,7 @@ module bank_registers
         end
 
 	generate
-	    integer i;		
+	    integer i;
 
 		initial
 	    for (i = 2; i < N_REGISTER; i = i + 1)

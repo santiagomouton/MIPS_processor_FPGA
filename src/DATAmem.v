@@ -16,7 +16,8 @@ module DATAmem
         input wire mem_write_i,
     
         output wire [NB_DATA-1:0] data_o
-    );
+    );  
+
 
     reg [NB_DATA-1:0] RAM[N_ELEMENTS-1:0];
     reg [NB_DATA-1:0] data_reg = 32'b0;//{NB_DATA{1'b0}}; 
@@ -44,5 +45,41 @@ module DATAmem
         else
             data_reg <= 32'bz;
     end
+
+
+//     reg [NB_DATA-1:0] RAM[N_ELEMENTS-1:0];
+//     reg [NB_DATA-1:0] data_reg = 32'b0;//{NB_DATA{1'b0}}; 
+    
+//     always @(negedge clock_i)
+//     begin
+//         if (enable_mem_i)
+//             begin
+//                 if (mem_write_i)
+//                 begin
+//                     RAM[addr_i] <= data_write_i;
+//                 end
+//                 else begin
+//                     if (mem_read_i)
+//                     begin
+//                         data_reg <= RAM[addr_i];
+//                     end
+//                 end
+//             end
+//         else begin
+//             data_reg <= 32'b0;
+//         end
+// /*         else
+//             RAM[addr_i] <= RAM[addr_i]; */
+//     end
+
+//     // Asignación de la salida
+//     always @(negedge clock_i) begin
+//         if (enable_mem_i) begin
+//             data_o <= data_reg;  // Salida tomada del registro de salida
+//         end else begin
+//             data_o <= 32'b0;  // Resetear la salida
+//         end
+//     end
+
 
 endmodule

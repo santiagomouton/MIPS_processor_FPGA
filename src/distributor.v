@@ -13,7 +13,7 @@ module distributor
 ) 
 (
     input wire [NB_DATA-1:0]instruction,
-    input wire regDst,
+    // input wire regDst,
     output wire [NB_OP-1:0]operation,
     output wire [NB_FUNCT-1:0]funct,
     output wire [NB_INM-1:0]inmediate,

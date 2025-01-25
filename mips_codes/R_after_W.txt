@@ -1,0 +1,4 @@
+addi R1, R9, 2
+addu R2, R9, R1
+addi R7, R9, 10
+halt
