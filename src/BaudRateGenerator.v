@@ -15,7 +15,7 @@ module BaudRateGenerator
     output wire tick,
     // INPUTS
     input wire clock,
-    input wire reset
+    input wire reset_i
 );    
     // counter ticks
     reg [8: 0]  counTicks;
@@ -30,7 +30,7 @@ module BaudRateGenerator
         a tick
     **/
     always @(posedge clock) begin
-        if (reset) begin
+        if (reset_i) begin
             counTicks   <= 8'b0;
         end
         else begin

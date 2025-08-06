@@ -251,6 +251,7 @@ module pipeline
 	fetch_decode_stage fetch_decode_stage
 	(
 		.clock_i(clock),  
+		.reset_i(reset_i),  
 		.en_pipeline(en_pipeline),		
 		.pc_i(pc_fetch),
 		.pc_o(pc_decode),

@@ -19,7 +19,7 @@ module rx_uart
    * clock:     Para cambio de estado 
    **/
     input   wire        clock,
-    input   wire        reset,
+    input   wire        reset_i,
     input   wire        rx,s_tick,                   
     output  reg         rx_done_tick,
     output  wire [7:0]  dout
@@ -51,7 +51,7 @@ module rx_uart
     **/
     always @(posedge clock) 
         begin
-            if (reset) begin
+            if (reset_i) begin
                 current_state       <= STATE_IDLE;
                 count_ticks_reg     <= 4'b0;
                 count_data          <= 3'b0;      

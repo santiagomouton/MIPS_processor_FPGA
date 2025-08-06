@@ -44,6 +44,7 @@ module mem_top
     DATAmem DATAmem
     (
         .clock_i(clock_i),
+        .reset_i(reset_i),
         .enable_mem_i(en_pipeline), 
         .addr_i(addr_mem),
         .data_write_i(data_wr_to_mem_interface_o),

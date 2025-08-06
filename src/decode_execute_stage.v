@@ -13,9 +13,9 @@ module decode_execute_stage
 	)
 	(
 		input wire clock,   
-		input wire reset,
+		input wire reset_i,
 		input wire en_pipeline,
-		input wire [7-1:0] pc_i,
+		input wire [NB_DATA-1:0] pc_i,
 		input wire [NB_REG-1:0]	register_a_i, register_b_i, register_rw_i,
 		// input wire [NB_REG-1:0]	shamt_i,
 
@@ -39,7 +39,7 @@ module decode_execute_stage
 
 		// output wire [NB_REG-1:0] shamt_o,
 
-		output wire [7-1:0] pc_o,
+		output wire [NB_DATA-1:0] pc_o,
 		output wire [NB_REG-1:0] register_a_o, register_b_o, register_rw_o,
 
 		output wire [NB_FUNCTION-1:0] function_o,
@@ -51,7 +51,7 @@ module decode_execute_stage
 		output wire halt_signal_o
 	);
 
-	reg [7-1:0] pc_reg;
+	reg [NB_DATA-1:0] pc_reg;
 	reg [NB_DATA-1:0] data_ra_reg, data_rb_reg, inm_ext_reg;
 	reg tipeI_reg;
 	reg [NB_REG-1:0] register_a_reg, register_b_reg, register_wr_reg;//, shamt_reg;
@@ -66,9 +66,9 @@ module decode_execute_stage
 
 	always @(negedge clock)
 		begin
-			if (reset)
+			if (reset_i)
 				begin 
-					pc_reg     	 		<= 6'b000000;
+					pc_reg     	 		<= 32'b0;
 					data_ra_reg  		<= 32'b0;
 					data_rb_reg  		<= 32'b0;
 					inm_ext_reg  		<= 32'b0;
@@ -77,8 +77,8 @@ module decode_execute_stage
 					regDest_signal_reg 	<= 2'b10;
 					opcode_reg 			<= 6'b0;
 					tipeI_reg 			<= 1'b0;
-					mem_signals_reg 	<= 6'b000000;
-					wb_signals_reg 		<= 6'b000;
+					mem_signals_reg 	<= 6'b0;
+					wb_signals_reg 		<= 6'b0;
 					halt_signal_reg 	<= 1'b0;
 				end
 			else
@@ -118,7 +118,7 @@ module decode_execute_stage
  
 	always @(negedge clock)
 		begin
-			if (reset)
+			if (reset_i)
 				begin
 					register_a_reg <= 5'b0;
 					register_b_reg <= 5'b0;

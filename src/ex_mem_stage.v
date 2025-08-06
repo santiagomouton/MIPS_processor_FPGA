@@ -7,12 +7,12 @@ module ex_mem_stage
 	)
 	(
 		input wire clock,  
-		input wire reset,  
+		input wire reset_i,  
 		input wire en_pipeline,
 		input wire [NB_DATA-1:0] data_wr_to_mem_i,
 		input wire [NB_DATA-1:0] alu_result_i,
 		input wire [NB_REGWR-1:0] writeReg_i,
-        input wire [7-1:0] pc_i,
+        input wire [NB_DATA-1:0] pc_i,
         input wire [5:0]mem_signals_i,
         input wire [2:0]wb_signals_i,
         input wire halt_signal_i,
@@ -20,14 +20,14 @@ module ex_mem_stage
 		output wire [NB_DATA-1:0] data_wr_to_mem_o,
         output wire [NB_DATA-1:0] alu_result_o,
         output wire [NB_REGWR-1:0] writeReg_o,
-        output wire [7-1:0] pc_o,
+        output wire [NB_DATA-1:0] pc_o,
         output wire [5:0]mem_signals_o,
         output wire [2:0]wb_signals_o,
         output wire halt_signal_o
 	);
 	
 
-	reg [7-1:0] pc_reg;
+	reg [NB_DATA-1:0] pc_reg;
 	reg [NB_DATA-1:0] data_wr_to_mem_reg, alu_result_reg;
     reg [NB_REGWR-1:0] writeReg_reg;
     reg [5:0] mem_signals_reg;
@@ -37,14 +37,14 @@ module ex_mem_stage
 
 	always @(negedge clock)
     begin
-        if (reset)
+        if (reset_i)
             begin 
-                pc_reg     	        <= 6'b000000;
+                pc_reg     	        <= 32'b0;
                 data_wr_to_mem_reg  <= 32'd0;
                 alu_result_reg      <= 32'd0;
-                writeReg_reg        <= 5'b00000;
-                mem_signals_reg     <= 6'b000000;
-                wb_signals_reg      <= 3'b000;
+                writeReg_reg        <= 5'b0;
+                mem_signals_reg     <= 6'b0;
+                wb_signals_reg      <= 3'b0;
                 halt_signal_reg     <= 1'b0;
             end
         else

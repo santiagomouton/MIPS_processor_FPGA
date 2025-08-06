@@ -12,7 +12,7 @@ module tx_uart
     input   wire  [N_DATA - 1:0]   din,
     input   wire                tx_start , s_tick,
     input   wire                clock,
-    input   wire                reset,
+    input   wire                reset_i,
     output  wire                tx,   
     output  reg                 tx_done_tick,
     output wire [NB_STATE -1:0]state          
@@ -41,7 +41,7 @@ module tx_uart
     **/
     always @(posedge clock) 
         begin
-            if (reset) begin
+            if (reset_i) begin
                 din_reg             <= 8'b0; 
                 count_data_reg      <= 3'b0;
                 count_ticks_reg     <= 4'b0;

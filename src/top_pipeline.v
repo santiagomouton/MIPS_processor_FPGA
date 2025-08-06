@@ -26,11 +26,11 @@ module top_pipeline
         input wire select_debug_or_alu_result,
         output wire [NB_DATA-1:0] data_mem_debug,
 
-        output wire [7-1:0] data_pc_debug,
+        output wire [NB_DATA-1:0] data_pc_debug,
 
         input wire [NB_DATA-1:0]data_inst_to_write,
         input wire ready_instr_to_write,
-        input wire [6:0]o_dir_mem_write,
+        input wire [NB_DATA-1:0]o_dir_mem_write,
 
         input wire en_pipeline,
         input wire en_read_inst,
@@ -41,13 +41,15 @@ module top_pipeline
         output wire halt_signal_o_wb,
         output wire halt_signal_decode_debug,
 
-        output wire [NB_DATA-1:0] alu_result_o_mem_test
+        output wire [NB_DATA-1:0] alu_result_o_mem_test,
+
+        output wire [31:0] wire_inmediate_paraver
 
 	);
     
 	// wire [6:0]o_dir_mem_read;
 
-    wire [6:0] pc_fetch, pc_decode;
+    wire [NB_DATA-1:0] pc_fetch, pc_decode;
     wire [NB_DATA-1:0] instruction_fetch, instruction_decode;
     
 	wire [5-1:0] wire_A_o_decode, wire_B_o_decode, wire_RW_o_decode;
@@ -62,13 +64,13 @@ module top_pipeline
     wire halt_signal_decode;
 
     wire pc_branch_or_jump;
-    wire [7-1:0] address_jump, address_branch, address_register;
+    wire [NB_DATA-1:0] address_jump, address_branch, address_register;
     wire [1:0]pc_src;
 
     //decode_execute_stage
     wire [NB_DATA-1:0] data_ra_o_execute, data_rb_o_execute;
     wire [NB_DATA-1:0] inmediate_o_execute;
-    wire [7-1:0] pc_o_execute;
+    wire [NB_DATA-1:0] pc_o_execute;
     wire [5:0] funct_o_execute;
 	wire [5:0]operation_o_execute;
 	wire tipeI_o_execute;
@@ -79,7 +81,7 @@ module top_pipeline
     wire halt_signal_o_execute;
 
     //execute_mem_stage
-    wire [7-1:0] pc_o_mem;
+    wire [NB_DATA-1:0] pc_o_mem;
     wire [NB_DATA-1:0] data_wr_to_mem_o_mem;
     wire [NB_DATA-1:0] alu_result_execute;
     wire [NB_DATA-1:0] alu_result_o_mem;
@@ -95,7 +97,7 @@ module top_pipeline
     wire [NB_REG-1:0] writeReg_o_wb;
     wire [NB_DATA-1:0] mem_data_read_o_wb;
 	wire [NB_DATA-1:0] alu_result_o_wb;
-	wire [6:0] pc_o_wb;
+	wire [NB_DATA-1:0] pc_o_wb;
     wire [1:0] mem_to_reg_o_wb;
     wire reg_write_o_wb;
 	wire [NB_DATA-1:0] data_write_to_reg;
@@ -113,7 +115,8 @@ module top_pipeline
 
     assign data_registers_debug = data_ra_o_decode;
     assign data_mem_debug = data_read_interface_o;
-    assign data_pc_debug = pc_decode;
+    // assign data_pc_debug = pc_decode;
+    assign data_pc_debug = pc_fetch;
 
  
     decode_forward decode_forward
@@ -202,12 +205,12 @@ module top_pipeline
     );
 
     // assign alu_result_o_mem_test = {25'b0, mem_signals_o_mem};
-    assign alu_result_o_mem_test = instruction_fetch;
+    // assign alu_result_o_mem_test = instruction_fetch;
 
     ex_mem_stage ex_mem_stage
     (
 		.clock(clock),   
-		.reset(reset),
+		.reset_i(reset),
 		.en_pipeline(en_pipeline),
 		.data_wr_to_mem_i(data_rb_o),
 		.alu_result_i(alu_result_execute),
@@ -255,7 +258,7 @@ module top_pipeline
     decode_execute_stage decode_execute_stage
     (
 		.clock(clock),   
-		.reset(reset),
+		.reset_i(reset),
 		.en_pipeline(en_pipeline),
 		.pc_i(pc_decode),
 		.function_i(funct_o_decode),
@@ -335,7 +338,8 @@ module top_pipeline
 
 	fetch_decode_stage fetch_decode_stage
 	(
-		.clock_i(clock),  
+		.clock_i(clock), 
+		.reset_i(reset), 
 		.en_pipeline(en_pipeline && if_dec_write_o),		
 		.pc_i(pc_fetch),
 		.pc_o(pc_decode),
@@ -361,6 +365,7 @@ module top_pipeline
 		.instruction_o(instruction_fetch)
 	);
 
+    assign wire_inmediate_paraver = instruction_decode;
 
     assign halt_signal_decode_debug = halt_signal_decode;
 

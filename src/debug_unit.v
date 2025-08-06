@@ -20,7 +20,7 @@ module debug_unit
 	output wire debug_out,
 	output wire [NB_DATA-1:0] o_data_mem,
 	output wire write_to_register,
-	output wire [NB_ADDR-1:0] o_dir_wr_mem,
+	output wire [NB_DATA-1:0] o_dir_wr_mem,
     output reg en_pipeline_o,
 	output reg en_read_mem,
 
@@ -35,18 +35,21 @@ module debug_unit
 	output wire [NB_ADDR-1:0] addr_mem_debug,
 	input  wire [NB_DATA-1:0] data_mem_debug,
 
-	input wire [6:0] data_pc_debug,
+	input wire [NB_DATA-1:0] data_pc_debug,
 
 	output wire [NB_STATE-1:0] state_paraver,
 	// output wire [5 - 1:0] state_paraver,
-	input wire [NB_DATA-1:0] alu_result_o_mem_test
+	input wire [NB_DATA-1:0] alu_result_o_mem_test,
+
+
+	input wire [31:0] wire_inmediate_paraver
 );
 
 	localparam HALT = 32'b11111100000000000000000000000000;
 
     reg en_pipeline_reg;
 	reg [2:0]count;
-	reg [6:0]o_dir_wr_mem_next, o_dir_wr_mem_reg;
+	reg [NB_DATA-1:0]o_dir_wr_mem_next, o_dir_wr_mem_reg;
 	// reg rcv_instr_complete;
 	reg [NB_STATE-1:0] state, next_state;
 	// reg en_rcv_instr;
@@ -77,8 +80,8 @@ module debug_unit
 
 
 	reg [2:0] count_reg, count_next;
-	reg [31:0] o_data_mem_reg, o_data_mem_next;
-	reg write_to_register_reg;
+	reg [NB_DATA-1:0] o_data_mem_reg, o_data_mem_next;
+	reg write_to_register_reg, write_to_register_next;
     reg finish_rcv_reg, finish_rcv_next;
 
 
@@ -100,9 +103,9 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 			  begin
 				  state 				<= Iddle;					
 				  en_pipeline_o 		<= 1'b0;						
-				  o_dir_wr_mem_reg 		<= 7'b0000000;
+				  o_dir_wr_mem_reg 		<= 0;
 				  count_reg 			<= 3'b000;
-				  o_data_mem_reg		<= 8'b00000000;
+				  o_data_mem_reg		<= 0;
 				  finish_rcv_reg		<= 1'b0;
 
 				//   tx_start				<= 1'b0;
@@ -116,6 +119,7 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 				  en_send_pc_reg		<= 1'b0;
 				  all_data_sent_reg		<= 1'b0;
 				//   data_to_send			<= 8'b00000000;
+				  write_to_register_reg <= 1'b0;
 			  end						
 			else
 			  begin
@@ -136,6 +140,7 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 				  en_send_pc_reg		<= en_send_pc_next;
 				  all_data_sent_reg		<= all_data_sent_next;
 				//   data_to_send			<= data_to_send_next;
+				  write_to_register_reg <= write_to_register_next;
               end
 		end
 
@@ -150,7 +155,7 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 			o_dir_wr_mem_next = o_dir_wr_mem_reg;
 			finish_rcv_next = finish_rcv_reg;
 			
-			write_to_register_reg = 1'b0;
+			write_to_register_next = 1'b0;
 			en_pipeline_reg = 1'b0;
 			en_read_mem = 1'b0;
 			// en_send_data_pc = 1'b0;
@@ -177,7 +182,7 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 				Iddle:
 					begin
 						finish_rcv_next		= 1'b0;
-						o_dir_wr_mem_next 	= 7'b0000000;
+						o_dir_wr_mem_next 	= 32'b0;
 						all_data_sent_next 	= 1'b0;
 						if(read_rx)
 							// tx_start = 1'b1;
@@ -211,24 +216,50 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 									finish_rcv_next = 1'b1;
 								end
 								next_state = Write_Instruction;
-								write_to_register_reg = 1'b1;											
+								write_to_register_next = 1'b1;											
 							end
 						else if (read_rx) 
 							begin
-								o_data_mem_next = {dout, o_data_mem_reg[NB_DATA    -1:8]};
+								// o_data_mem_next = {dout, o_data_mem_reg[NB_DATA-1:8]};
+								// o_data_mem_next[((count_reg+1)*7)+:] = dout;
+								// o_data_mem_next[count_reg*(N_BITS)+:(N_BITS-1)] = dout;
+								case (count_reg)
+									3'b000: begin 
+										o_data_mem_next[7:0]   = dout;  // Byte 0
+										
+										// data_to_send = o_data_mem_reg[31:24];
+										// tx_start = 1'b1;
+									end
+									3'b001: begin
+										o_data_mem_next[15:8]  = dout;  // Byte 1
+										// data_to_send = o_data_mem_reg[7:0];
+										// tx_start = 1'b1;
+									end
+									3'b010: begin
+										o_data_mem_next[23:16] = dout;  // Byte 2
+										// data_to_send = o_data_mem_reg[15:8];
+										// tx_start = 1'b1;
+									end
+									3'b011: begin
+										o_data_mem_next[31:24] = dout;  // Byte 3
+										// data_to_send = o_data_mem_reg[23:16];
+										// tx_start = 1'b1;
+									end
+								endcase
+								// data_to_send = o_data_mem_reg[count_reg*(N_BITS)+:(N_BITS-1)];
+
 								
-								// tx_start = 1'b1;
-								// data_to_send = dout;
 								
 								count_next = count_reg + 1;
-							end					      
+							end
 					end
 
 				Write_Instruction:					
 					begin
-						write_to_register_reg = 1'b1;
+						write_to_register_next = 1'b1;
 						count_next = 3'b000;
 						o_dir_wr_mem_next = o_dir_wr_mem_reg + 1;
+						// o_data_mem_next = 32'h00000000;
 						if (finish_rcv_reg)
 							next_state = Iddle;												
 						else begin
@@ -301,7 +332,7 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 									// tx_start_next = 1'b1;
 									tx_start = 1'b1;
 									// data_to_send = {8'b0};
-									data_to_send = data_registers_debug[count_send_bytes*(N_BITS)+:(N_BITS-1)];
+									data_to_send = data_registers_debug[count_send_bytes*(N_BITS)+:(N_BITS)];
 									// data_to_send_next = data_registers_debug[count_send_bytes*(N_BITS)+:(N_BITS-1)];
 									// data_to_send = alu_result_o_mem_test[count_send_bytes*(N_BITS)+:(N_BITS-1)];
 									count_send_bytes_next = count_send_bytes + 1;
@@ -326,23 +357,43 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 									end
 								end else begin
 									tx_start = 1'b1;
-									data_to_send_next = data_mem_debug[count_send_bytes*(N_BITS)+:(N_BITS-1)];
+									// data_to_send_next = data_mem_debug[count_send_bytes*(N_BITS)+:(N_BITS-1)];
 									
-									// data_to_send = alu_result_o_mem_test[count_send_bytes*(N_BITS)+:(N_BITS-1)];
+									data_to_send = data_mem_debug[count_send_bytes*(N_BITS)+:(N_BITS)];
 									count_send_bytes_next = count_send_bytes + 1;
 								end
 							end
 						end
 
-						else if (en_send_pc_reg) begin
+ 						else if (en_send_pc_reg) begin
 							if (tx_done) begin
-								tx_start = 1'b1;
-								data_to_send = {1'b0, data_pc_debug};
-
-								en_send_pc_next = 1'b0;
-								all_data_sent_next = 1'b1;
+								if (count_send_bytes == (N_BYTES)) begin
+									count_send_bytes_next = 3'b000;
+									en_send_pc_next = 1'b0;
+									all_data_sent_next = 1'b1;
+								end else begin
+									tx_start = 1'b1;
+									data_to_send = wire_inmediate_paraver[count_send_bytes*(N_BITS)+:(N_BITS)];
+									count_send_bytes_next = count_send_bytes + 1;
+								end
 							end
 						end
+
+/* 						else if (en_send_pc_reg) begin
+							if (tx_done) begin
+								if (count_send_bytes == (N_BYTES)) begin
+									count_send_bytes_next = 3'b000;
+									all_data_sent_next = 1'b1;
+									en_send_pc_next = 1'b0;
+
+								end else begin
+									tx_start = 1'b1;
+									data_to_send = wire_inmediate_paraver[count_send_bytes*(N_BITS)+:(N_BITS-1)];
+									
+									count_send_bytes_next = count_send_bytes + 1;
+								end
+							end
+						end */
 
 						if (all_data_sent_reg)
 						begin
@@ -379,9 +430,9 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
 
     // ______________________ BRG ____________ //
     BaudRateGenerator myBRG (
-        .tick   (tick),
-        .clock  (clock_i),
-        .reset  (reset_i)
+        .tick(tick),
+        .clock(clock_i),
+        .reset_i(reset_i)
     );
 // wire tx_start_next_wire;
 // assign tx_start_next_wire = tx_start;
@@ -393,7 +444,7 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
         .tx_start(tx_start),												// 1 cuando comienza a transmitir
         .din(data_to_send),						
         .clock(clock_i),
-        .reset(reset_i),
+        .reset_i(reset_i),
 		.state()
     );
 
@@ -404,7 +455,7 @@ reg [N_BITS-1:0] data_to_send, data_to_send_next;
         .rx_done_tick(read_rx), 
         .dout(dout),
         .clock(clock_i),
-        .reset(reset_i)
+        .reset_i(reset_i)
     );
 
 endmodule

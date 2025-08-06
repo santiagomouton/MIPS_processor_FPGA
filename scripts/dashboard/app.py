@@ -9,7 +9,9 @@ import time
 app = Flask(__name__)
 
 # Configuración UART
-puerto_serial = serial.Serial('COM4', baudrate=9600, timeout=1)
+puerto_serial = serial.Serial('COM4', baudrate=9600, timeout=1, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, 
+                              stopbits=serial.STOPBITS_ONE, xonxoff=False, rtscts=False, dsrdtr=False)
+
 
 data = {
     "registers": [["0000"] for _ in range(32)],  # Stack de registros (32 filas de 32 bits)
@@ -22,7 +24,7 @@ def read_uart():
     """Lee datos UART y actualiza las estructuras."""
     global data
     # buffer_size = 260  # 128 + 128 + 4 = tamaño fijo por ciclo
-    buffer_size = 641  # (32*4) + (128*4) + 1 = tamaño fijo por ciclo
+    buffer_size = 644  # (32*4) + (128*4) + 1 = tamaño fijo por ciclo
     # buffer_size = 129
 
     while True:
@@ -35,6 +37,19 @@ def read_uart():
 
         # # Enviar el paquete completo
         # time.sleep(8)  # Pausa de 1 segundo entre paquetes
+        time.sleep(0.5)
+        # bytes_disponibles = puerto_serial.in_waiting
+
+        # if bytes_disponibles > 1:
+        #     print(f"Número de bytes disponibles para leer: {bytes_disponibles}")
+
+        # while puerto_serial.in_waiting >= 1:
+        #     datos_escritura = puerto_serial.read(1)
+        #     #for i in range(88):
+        #     #datass = datos_escritura[i]
+        #     #print(datass.hex())
+        #     print( datos_escritura.hex())
+
 
         try:
             # if puerto_serial.in_waiting >= buffer_size:
@@ -49,11 +64,10 @@ def read_uart():
             # if puerto_serial.in_waiting >= 128:
             time.sleep(0.5)
             # bytes_disponibles = puerto_serial.in_waiting
-
             # if bytes_disponibles > 1:
             #     print(f"Número de bytes disponibles para leer: {bytes_disponibles}")
-
-            if puerto_serial.in_waiting >= buffer_size:
+            print(puerto_serial.in_waiting)
+            if puerto_serial.in_waiting == buffer_size:
                 # datos_binarios = puerto_serial.read(128)
                 datos_binarios = puerto_serial.read(buffer_size)
                 
@@ -81,17 +95,25 @@ def read_uart():
                     # Convertir los 4 bytes en un entero de 32 bits
                     # data["registers"][i] = [int(b) for b in datos_binarios_fila]
                     data["registers"][i] = datos_binarios_fila[::-1].hex()
+                    print(datos_binarios_fila[::-1].hex())
 
                 # Procesar memoria de datos
                 for i in range(32):  # 32 filas
                     start = 128 + (i * 4)
                     datos_binarios_fila = datos_binarios[start:start + 4]
+                    # print(datos_binarios[start:start + 1], datos_binarios[start:start + 2], 
+                    #       datos_binarios[start:start + 3], datos_binarios[start:start + 4]
+                    #       , datos_binarios_fila, datos_binarios_fila[::-1].hex())
+
                     # data["memory"][i] = [int(b) for b in datos_binarios_fila]
                     data["memory"][i] = datos_binarios_fila[::-1].hex()
+                    print(datos_binarios_fila[::-1].hex())
 
                 # Procesar el Program Counter
-                pc_data = datos_binarios[-1:]
-                data["pc"] = pc_data.hex()
+                pc_data = datos_binarios[640:644]
+                data["pc"] = pc_data[::-1].hex()
+                print(pc_data[::-1].hex())
+
 
         except Exception as e:
             print(f"Error leyendo UART: {e}")
@@ -99,6 +121,7 @@ def read_uart():
 
 # Inicia un hilo para leer datos UART
 threading.Thread(target=read_uart, daemon=True).start()
+
 
 
 # Función para cargar un archivo
@@ -115,7 +138,7 @@ def cargar_archivo():
             puerto_serial.write(bytes_linea)
             print(i, dato, int.from_bytes(bytes_linea, byteorder='big'))
             # print("Enviado:", dato)
-            time.sleep(0.2)
+            time.sleep(0.5)
             
             datos_binarios = puerto_serial.read(1)
             if datos_binarios == b'':
@@ -155,14 +178,14 @@ def upload_file():
 
     for linea in file:
         linea = linea.strip()  # Eliminar caracteres de nueva línea u otros espacios en blanco
-        print("linea:", linea)
+        #print("linea:", linea)
         
         # Enviar los bytes en pares de caracteres hexadecimales
         for i in range(len(linea), 0, -2):
             hexaData = linea[i-2:i]
             byteData = bytes.fromhex(hexaData.decode('utf-8'))
             puerto_serial.write(byteData)
-            print(i, int.from_bytes(byteData, byteorder='big', signed=False), "pasado_a_uart=", byteData, "En hexa=", hexaData)
+            #print(i, int.from_bytes(byteData, byteorder='big', signed=False), "pasado_a_uart=", byteData, "En hexa=", hexaData)
             # print("Enviado:", dato)
             time.sleep(0.2)
 

@@ -21,12 +21,18 @@ module bank_registers
 	);
 	reg [NB_DATA-1:0] registers[N_REGISTER-1:0];  	
 
+	integer i;
+
     always @(posedge clock_i)
         begin
 	        if (reset_i)
-				begin	        			
-					data_ra_o <= 32'b0;
-					data_rb_o <= 32'b0;
+				begin	  
+/* 					for (i = 0; i < 32; i = i + 1) begin
+              			registers[i] = 32'd0;
+            		end */
+					registers[3] <= 32'hf1a283b4;
+					data_ra_o <= 32'd0;
+					data_rb_o <= 32'd0;
 				end        	
         	else 
 				begin
@@ -43,15 +49,5 @@ module bank_registers
 					data_rb_o <= registers[addr_rb_i];
 				end
         end
-
-	generate
-	    integer i;
-
-		initial
-	    for (i = 2; i < N_REGISTER; i = i + 1)
-	        registers[i] = 32'd0;
-
-	endgenerate
-
 
 endmodule

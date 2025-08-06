@@ -9,7 +9,7 @@ module decode_top
 	(
 		input wire clock_i,
 		input wire reset_i,
-		input wire [7-1:0] pc_decode,
+		input wire [NB_DATA-1:0] pc_decode,
 		//input wire enable_i,
 		input wire reg_write_i,
 		input wire select_debug_or_wireA,	
@@ -41,9 +41,9 @@ module decode_top
         output wire [NB_DATA-1:0] data_rb_o,
 
 		output wire pc_branch_or_jump,
-		output wire [7-1:0] address_jump,
-		output wire [7-1:0] address_branch,
-		output wire [7-1:0] address_register,
+		output wire [NB_DATA-1:0] address_jump,
+		output wire [NB_DATA-1:0] address_branch,
+		output wire [NB_DATA-1:0] address_register,
 		output wire [1:0] pc_src,
 		output wire halt_signal,
 		output wire [31:0] wire_inmediate_paraver
@@ -83,9 +83,12 @@ module decode_top
     // assign funct_o = funct;
 	assign wire_inmediate_sign_o = wire_inmediate_sign;
 
-	assign pc_branch_or_jump = ((is_equal && beq) | (!is_equal && bne) | jump);
-	assign address_jump 	 = pc_decode + wire_direction[7-1:0]; //acotado porque tomamos solo 32 direcciones de instrucciones en este tp
-	assign address_register  = data_ra[7-1:0];
+	// wire branch_taken = ((is_equal && beq) | (!is_equal && bne) | jump);
+	wire branch_taken = (is_equal && beq) | (!is_equal && bne);
+	assign pc_branch_or_jump = branch_taken | jump;
+
+	assign address_jump 	 = pc_decode + {6'b0, wire_direction};
+	assign address_register  = data_ra;
 
     assign mem_signals 	  = (stall) ? {6'b0} : mem_signals_ctr;
 	assign wb_signals     = (stall) ? {3'b0} : wb_signals_ctr;

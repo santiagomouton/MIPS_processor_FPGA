@@ -72,20 +72,22 @@ module top_board_no_test_basys3
     //cambiar por modulo uart
     wire [NB_DATA-1:0] data_registers_debug, alu_result_o_mem_test;
     wire [NB_DATA-1:0] data_mem_debug;
-    wire [7-1:0] data_pc_debug;
+    wire [NB_DATA-1:0] data_pc_debug;
 
     wire [NB_DATA-1:0] data_inst_to_write;
     wire ready_instr_to_write;
-    wire [6:0] o_dir_mem_write;
+    wire [NB_DATA-1:0] o_dir_mem_write;
     
     wire en_pipeline;
     wire en_read_inst;
 
     wire halt_signal_o_wb;
 
+    wire [31:0] wire_inmediate_paraver;
+
     top_pipeline mips(
 		.clock(clock),
-		.reset(reset),
+		.reset(reset|!locked),
 
         .select_debug_or_wireA(select_debug_or_wireA),
         .addr_reg_debug(addr_reg_debug),
@@ -111,14 +113,16 @@ module top_board_no_test_basys3
         .halt_signal_o_wb(halt_signal_o_wb),
         .halt_signal_decode_debug(halt_signal_decode),
 
-        .alu_result_o_mem_test(alu_result_o_mem_test)
+        .alu_result_o_mem_test(),
+
+        .wire_inmediate_paraver(wire_inmediate_paraver)
 	);
 
 
     debug_unit debug_unit
 	(
         .clock_i(clock),
-        .reset_i(reset),
+        .reset_i(reset|!locked),
         .halt_signal(halt_signal_o_wb),
 	    .tx_rx(receiving),
 	    .select_debug_or_wireA(select_debug_or_wireA),
@@ -140,7 +144,9 @@ module top_board_no_test_basys3
         .en_pipeline_o(en_pipeline),
         .en_read_mem(en_read_inst),
 
-        .alu_result_o_mem_test(alu_result_o_mem_test)
+        .alu_result_o_mem_test(),
+
+        .wire_inmediate_paraver(wire_inmediate_paraver)
 	);
 
 

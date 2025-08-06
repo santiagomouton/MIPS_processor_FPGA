@@ -2,11 +2,11 @@
 
 module pc
 	#(
-		parameter NB_DATA = 7
+		parameter NB_DATA = 32
 	)
 	(
 		input wire clock,
-		input wire reset,
+		input wire reset_i,
 		input wire enable,				
 		input wire [NB_DATA-1:0] next_addr_i,
 		output wire [NB_DATA-1:0] next_addr_o,
@@ -17,8 +17,8 @@ module pc
 
 	always @(negedge clock)
 		begin
-		    if (reset)
-		        reg_addr <= {NB_DATA{1'b0}};
+		    if (reset_i)
+		        reg_addr <= 0;
 		    else 
 		    	begin
 		    		if (enable) 
@@ -31,6 +31,6 @@ module pc
 		end
 
 	assign next_addr_o = reg_addr;
-	assign next_addr_plus_four_o = reg_addr + 7'b0000001;
+	assign next_addr_plus_four_o = reg_addr + 32'd1;
 
 endmodule

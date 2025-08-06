@@ -7,6 +7,7 @@ module DATAmem
     )
     (
         input wire clock_i,
+        input wire reset_i,
         input wire enable_mem_i, 
 
         input wire [7-1:0] addr_i,
@@ -24,27 +25,30 @@ module DATAmem
 
     assign data_o = data_reg;
     
+    integer i;
+    
     always @(negedge clock_i)
     begin
-        if (enable_mem_i)
-            begin
-                if (mem_write_i)
-                    RAM[addr_i] <= data_write_i;
+        if (reset_i) begin
+            for(i=0; i < N_ELEMENTS; i = i+1) begin
+                RAM[i] <= 32'b0;
             end
-/*         else
-            RAM[addr_i] <= RAM[addr_i]; */
+        end else begin
+            if (enable_mem_i)
+                begin
+                    if (mem_write_i)
+                        RAM[addr_i] <= data_write_i;
+                    if (mem_read_i)
+                        data_reg <= RAM[addr_i];
+                end
+            else
+                data_reg <= 32'bz;
+        end
     end
 
-    always @(negedge clock_i)
-    begin
-        if (enable_mem_i)
-            begin
-                if (mem_read_i)
-                    data_reg <= RAM[addr_i];
-            end
-        else
-            data_reg <= 32'bz;
-    end
+
+/*         else
+            RAM[addr_i] <= RAM[addr_i]; */
 
 
 //     reg [NB_DATA-1:0] RAM[N_ELEMENTS-1:0];

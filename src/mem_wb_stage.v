@@ -12,7 +12,7 @@ module mem_wb_stage
 		input wire enable_pipe_i,
 		input wire [NB_DATA-1:0] mem_data_read_i,
 		input wire [NB_DATA-1:0] alu_result_i,
-		input wire [7-1:0] pc_i,
+		input wire [NB_DATA-1:0] pc_i,
         // input wire [NB_DATA-1:0] data_inm_i, //dato a escribir en registro (LUI) 
 		input wire [NB_REG-1:0] write_register_i,
 		input wire [2:0]wb_signals_i,
@@ -22,7 +22,7 @@ module mem_wb_stage
 		output wire [2-1:0] mem_to_reg_o,
 		output wire [NB_DATA-1:0] mem_data_read_o,
 		output wire [NB_DATA-1:0] alu_result_o,
-		output wire [7-1:0] pc_o,
+		output wire [NB_DATA-1:0] pc_o,
 		// output wire [NB_DATA-1:0] inm_ext_o,
 		output wire reg_write_o,
 		output wire halt_signal_o	
@@ -32,7 +32,7 @@ module mem_wb_stage
 	reg [NB_REG-1:0] write_reg;
 	reg reg_write;
 	reg [NB_DATA-1:0] mem_data_reg, alu_result_reg, inm_ext_reg;
-	reg [7-1:0] pc_reg;
+	reg [NB_DATA-1:0] pc_reg;
 	reg halt_signal_reg;
 	
 
