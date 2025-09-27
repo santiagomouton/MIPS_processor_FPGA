@@ -12,7 +12,7 @@ module wb_top
 
 		input wire [2-1:0] mem_to_reg_i,
 
-		output wire [NB_DATA-1:0] data_write_to_reg
+		output wire [NB_DATA-1:0] data_write_to_reg_o
 	);
 
 
@@ -23,7 +23,7 @@ module wb_top
 		.op3_i(pc_i),
 		.op4_i(32'b0),
 		.sel_i(mem_to_reg_i),
-		.data_o(data_write_to_reg)
+		.data_o(data_write_to_reg_o)
     );
 
 endmodule

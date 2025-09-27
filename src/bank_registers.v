@@ -27,10 +27,9 @@ module bank_registers
         begin
 	        if (reset_i)
 				begin	  
-/* 					for (i = 0; i < 32; i = i + 1) begin
+					for (i = 0; i < 32; i = i + 1) begin
               			registers[i] = 32'd0;
-            		end */
-					registers[3] <= 32'hf1a283b4;
+            		end
 					data_ra_o <= 32'd0;
 					data_rb_o <= 32'd0;
 				end        	

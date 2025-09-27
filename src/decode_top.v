@@ -28,24 +28,24 @@ module decode_top
 		// output wire [NB_REG-1:0] shamt_o,
 		output wire [NB_REG-1:0] wireA_o, wireB_o, wireRW_o,
 
-		output wire [5:0]mem_signals, 
-		output wire [2:0]wb_signals,
-        output wire [1:0]regDest_signal,
-        output wire tipeI_signal,
-        output wire shamt_signal,
+		output wire [5:0]mem_signals_o, 
+		output wire [2:0]wb_signals_o,
+        output wire [1:0]regDest_signal_o,
+        output wire tipeI_signal_o,
 
+        output wire shamt_signal_o,
         output wire [NB_OPCODE-1:0] opcode_o,
         output wire [5:0] funct_o,
         output wire [NB_DATA-1:0] wire_inmediate_sign_o,
         output wire [NB_DATA-1:0] data_ra_o,
         output wire [NB_DATA-1:0] data_rb_o,
 
-		output wire pc_branch_or_jump,
-		output wire [NB_DATA-1:0] address_jump,
-		output wire [NB_DATA-1:0] address_branch,
-		output wire [NB_DATA-1:0] address_register,
-		output wire [1:0] pc_src,
-		output wire halt_signal,
+		output wire pc_branch_or_jump_o,
+		output wire [NB_DATA-1:0] address_jump_o,
+		output wire [NB_DATA-1:0] address_branch_o,
+		output wire [NB_DATA-1:0] address_register_o,
+		output wire [1:0] pc_src_o,
+		output wire halt_signal_o,
 		output wire [31:0] wire_inmediate_paraver
 	);
 
@@ -85,18 +85,18 @@ module decode_top
 
 	// wire branch_taken = ((is_equal && beq) | (!is_equal && bne) | jump);
 	wire branch_taken = (is_equal && beq) | (!is_equal && bne);
-	assign pc_branch_or_jump = branch_taken | jump;
+	assign pc_branch_or_jump_o = branch_taken | jump;
 
-	assign address_jump 	 = pc_decode + {6'b0, wire_direction};
-	assign address_register  = data_ra;
+	assign address_jump_o 	 = pc_decode + {6'b0, wire_direction};
+	assign address_register_o  = data_ra;
 
-    assign mem_signals 	  = (stall) ? {6'b0} : mem_signals_ctr;
-	assign wb_signals     = (stall) ? {3'b0} : wb_signals_ctr;
-	assign regDest_signal = (stall) ? {2'b0} : regDest_signal_ctr;
-	assign opcode_o 	  = (stall) ? {6'b0} : opcode_ctr;
-	assign funct_o 		  = (stall) ? {6'b0} : funct;
-	assign tipeI_signal   = (stall) ? (1'b1) : tipeI_signal_ctr;
-	assign shamt_signal   = (stall) ? (1'b0) : shamt_signal_ctr;
+    assign mem_signals_o   	= (stall) ? {6'b0} : mem_signals_ctr;
+	assign wb_signals_o     = (stall) ? {3'b0} : wb_signals_ctr;
+	assign regDest_signal_o = (stall) ? {2'b0} : regDest_signal_ctr;
+	assign opcode_o 	  	= (stall) ? {6'b0} : opcode_ctr;
+	assign funct_o 		  	= (stall) ? {6'b0} : funct;
+	assign tipeI_signal_o   = (stall) ? (1'b1) : tipeI_signal_ctr;
+	assign shamt_signal_o   = (stall) ? (1'b0) : shamt_signal_ctr;
 
 
 	branch branch
@@ -107,7 +107,7 @@ module decode_top
 		.data_rb_branch(data_rb_branch),
 
 		.is_equal(is_equal),
-		.branch_address_o(address_branch)
+		.branch_address_o(address_branch_o)
 	);
 
  	multiplexor_2_in #(.NB_DATA(NB_REG)) addr_debug_or_wireA
@@ -147,21 +147,22 @@ module decode_top
 
 	control_unit control_unit
 	(
-        .opcode(operation),
+        .opcode_i(operation),
         // .funct(funct),
-        .wb_signals(wb_signals_ctr),
-		.tipeI(tipeI_signal_ctr),
 		
-		.shamt(shamt_signal_ctr),
-        .beq(beq),
-		.bne(bne),
-		.jump(jump),
-		.pc_src(pc_src),
+		.tipeI_o(tipeI_signal_ctr),
+ 		.shamt_o(shamt_signal_ctr),
+        .beq_o(beq),
+		.bne_o(bne),
+		.jump_o(jump),
+		.pc_src_o(pc_src_o),
 
-        .regDest_signal(regDest_signal_ctr),
+        .regDest_signal_o(regDest_signal_ctr),
+        .wb_signals_o(wb_signals_ctr),
+        .mem_signals_o(mem_signals_ctr),
+		// .control_signals_o(control_signals_o),
 		.opcode_o(opcode_ctr),
-        .mem_signals(mem_signals_ctr),
-		.halt_signal(halt_signal)
+		.halt_signal_o(halt_signal_o)
 	);
 
 	sign_extension sign_extension

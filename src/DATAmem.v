@@ -21,7 +21,7 @@ module DATAmem
 
 
     reg [NB_DATA-1:0] RAM[N_ELEMENTS-1:0];
-    reg [NB_DATA-1:0] data_reg = 32'b0;//{NB_DATA{1'b0}}; 
+    reg [NB_DATA-1:0] data_reg; 
 
     assign data_o = data_reg;
     
@@ -33,16 +33,17 @@ module DATAmem
             for(i=0; i < N_ELEMENTS; i = i+1) begin
                 RAM[i] <= 32'b0;
             end
+            data_reg <= 32'b0;
         end else begin
             if (enable_mem_i)
                 begin
                     if (mem_write_i)
                         RAM[addr_i] <= data_write_i;
-                    if (mem_read_i)
-                        data_reg <= RAM[addr_i];
                 end
-            else
-                data_reg <= 32'bz;
+            if (mem_read_i)
+                data_reg <= RAM[addr_i];
+            // else
+            //     data_reg <= 32'bz;
         end
     end
 

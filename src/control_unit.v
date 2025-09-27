@@ -6,26 +6,34 @@ module control_unit
 		parameter NB_OP = 6,
 		// parameter NB_FUNCT = 6,
 		parameter N_REGISTER = 32,
-		parameter N_REGDEST = 2
+		parameter N_REGDEST = 2,
+		parameter NB_CONTROL_SIGNALS = 18
     )
     (
-        input wire [NB_OP-1:0]opcode,
+        input wire [NB_OP-1:0]opcode_i,
         // input wire [NB_FUNCT-1:0]funct,
 
-        output wire tipeI,
-        output wire shamt,
-        output wire beq,
-		output wire bne,
-		output wire jump,
-        output wire [1:0]pc_src, // (00: address_register, 01: address_jump, 10: address_branch) 
+        output wire tipeI_o,
+        output wire shamt_o,
+        output wire beq_o,
+		output wire bne_o,
+		output wire jump_o,
+        output wire [1:0]pc_src_o, // (00: address_register, 01: address_jump, 10: address_branch) 
+        output wire [N_REGDEST-1:0]regDest_signal_o, // 1-0(00: wireB, 01: wireWR, 10: 32'b1)
 
-        output wire [N_REGDEST-1:0]regDest_signal, // 1-0(00: wireB, 01: wireWR, 10: 32'b1)
+
+        output wire [5:0]mem_signals_o, // 5(sign), 4-3(mem_read, mem_write), 2-0(Word, HalfWord, Byte)  
+        output wire [2:0]wb_signals_o, // 2(regWrite), 1-0(mem_to_reg)(00:memData_to_reg, 01: alu_result_to_reg, 10: pc_to_reg)
+ 
         output wire [NB_OP-1:0]opcode_o,
+        output wire halt_signal_o
 
-        output wire [5:0]mem_signals, // 5(sign), 4-3(mem_read, mem_write), 2-0(Word, HalfWord, Byte)  
-        output wire [2:0]wb_signals, // 2(regWrite), 1-0(mem_to_reg)(00:memData_to_reg, 01: alu_result_to_reg, 10: pc_to_reg)
-
-        output reg halt_signal
+        // output wire control_signals_o[NB_CONTROL_SIGNALS-1:0]
+        // 17: tipeI, 16: shamt, 15: beq, 14: bne, 13: jump
+        // [12:11]: pc_src (00: address_register, 01: address_jump, 10: address_branch)
+        // [10:9]: regDest_signal (00: wireB, 01: wireWR, 10: 32'b1)
+        // [8:3]:   mem_signals (5(sign), 4-3(mem_read, mem_write), 2-0(Word, HalfWord, Byte))
+        // [2:0]:   wb_signals (2(regWrite), 1-0(mem_to_reg)(00:memData_to_reg, 01: alu_result_to_reg, 10: pc_to_reg))
 
     );
 
@@ -40,6 +48,7 @@ module control_unit
 
     reg [5:0]mem_signals_reg;
     reg [2:0]wb_signals_reg;
+    reg halt_signal_reg;
 
     initial begin
         tipeI_reg = 1'b0;     
@@ -53,7 +62,7 @@ module control_unit
         regDest_signal_reg = 2'b00;
         mem_signals_reg = 6'b000000;
         wb_signals_reg = 3'b000;
-        halt_signal = 1'b0;
+        halt_signal_reg = 1'b0;
     end
 
     always @(*) begin
@@ -67,9 +76,9 @@ module control_unit
         regDest_signal_reg = 2'b00;
         mem_signals_reg = 6'b000000;
         wb_signals_reg = 3'b000;
-        halt_signal = 1'b0;
+        halt_signal_reg = 1'b0;
 
-        case (opcode)
+        case (opcode_i)
             6'b000000: begin  //TIPO R
                 tipeI_reg = 1'b0;
                 beq_reg   = 1'b0;
@@ -143,12 +152,13 @@ module control_unit
                 pc_src_reg     = 2'b00;
             end
             6'b101011: begin //sw
-                tipeI_reg = 1'b0;
+                tipeI_reg = 1'b1;
                 beq_reg   = 1'b0;
                 bne_reg   = 1'b0;
                 jump_reg  = 1'b0;
                 regDest_signal_reg = 3'b00;
-                mem_signals_reg = 6'b010100;
+                // mem_signals_reg = 6'b010100;
+                mem_signals_reg = 6'b001100;
                 wb_signals_reg = 3'b000;
                 pc_src_reg     = 2'b00;
             end
@@ -218,7 +228,7 @@ module control_unit
                 wb_signals_reg = 3'b000;
             end
             6'b111111: begin // HALT
-                halt_signal = 1'b1;
+                halt_signal_reg = 1'b1;
                 tipeI_reg = 1'b0;
                 beq_reg   = 1'b0;
                 bne_reg   = 1'b0;
@@ -228,7 +238,7 @@ module control_unit
                 wb_signals_reg = 3'b000;
             end
             default: begin
-                halt_signal = 1'b0;
+                halt_signal_reg = 1'b0;
                 tipeI_reg = 1'b0;
                 regDest_signal_reg = 3'b00;
                 beq_reg   = 1'b0;
@@ -240,16 +250,19 @@ module control_unit
         endcase
     end
 
-    assign wb_signals = wb_signals_reg;
-    assign tipeI = tipeI_reg;
-    assign shamt = shamt_reg;
-    assign beq = beq_reg;
-    assign bne = bne_reg;
-    assign jump = jump_reg;
-    assign pc_src = pc_src_reg;
-    assign regDest_signal = regDest_signal_reg;
-    assign opcode_o = opcode;
+    // assign control_signals_o = {tipeI_reg, shamt_reg, beq_reg, bne_reg, jump_reg, pc_src_reg, regDest_signal_reg, opcode, mem_signals_reg, wb_signals_reg}
+    assign tipeI_o = tipeI_reg;
+    assign shamt_o = shamt_reg;
+    assign beq_o = beq_reg;
+    assign bne_o = bne_reg;
+    assign jump_o = jump_reg;
+    assign pc_src_o = pc_src_reg;
+    assign regDest_signal_o = regDest_signal_reg;
 
-    assign mem_signals = mem_signals_reg;
+    assign mem_signals_o = mem_signals_reg;
+    assign wb_signals_o = wb_signals_reg;
+    assign opcode_o = opcode_i;
+    assign halt_signal_o = halt_signal_reg;
+
 
 endmodule

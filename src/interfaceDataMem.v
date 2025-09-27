@@ -20,11 +20,6 @@ module interfaceDataMEM
 
 	reg [NB_DATA-1:0] data_write_reg;
 	reg [NB_DATA-1:0] data_read_reg;
-
-	reg [NB_DATA-1:0] data_read_paraver_reg;
-
-	assign data_write_o = data_write_reg;
-	assign data_read_o  = data_read_reg;
     
 
 	always @(*)
@@ -34,47 +29,27 @@ module interfaceDataMEM
 	                if (mem_signals_i[5]) //signado 
 	                	begin 
 			            	case (mem_signals_i[2:0]) //size(Word, HalfWord, Byte)		            		
-				                	`BYTE:	                		
-				                		begin
-				                			data_read_reg = {24'b0, data_read_i[7:0]};   		  			
-				                		end	                		                
-				                            
-				                	`HALF_WORD:
-				                		begin				                			                			
-				                			data_read_reg = {16'b0, data_read_i[15:0]};  
-				                    	end
-				                    	
-				                	`WORD:
-				                	  	begin
-									 		data_read_reg = data_read_i;     
-				                		end
-
-				                    default:
-				                    	data_read_reg = 32'b0;        
-	                    	
-	                			endcase
+								`BYTE:	                		
+									data_read_reg = {{24{data_read_i[7]}}, data_read_i[7:0]}; 		  			
+								`HALF_WORD:
+									data_read_reg = {{16{data_read_i[15]}}, data_read_i[15:0]}; 
+								`WORD:
+									data_read_reg = data_read_i;     
+								default:
+									data_read_reg = 32'b0;        
+	                		endcase
 	                	end
 	              	else
 	              		begin
 	              			case (mem_signals_i[2:0])	              				
-				                	`BYTE:	                		
-				                		begin
-				                			data_read_reg = {{24{data_read_i[7]}}, data_read_i[7:0]}; 			                			           			
-				                		end	                		                
-				                            
-				                	`HALF_WORD:
-				                		begin	                			
-				                			data_read_reg = {{16{data_read_i[15]}}, data_read_i[15:0]};   
-				                    	end
-				                    	
-				                	`WORD:
-				                	  begin
-				                		data_read_reg = data_read_i;                 	
-				                		end
-
-				                    default:
-				                    	data_read_reg = 32'b0;        
-	                    	
+								`BYTE:	                		
+									data_read_reg = {{24{1'b0}}, data_read_i[7:0]}; 			                			           			
+								`HALF_WORD:
+									data_read_reg = {{16{1'b0}}, data_read_i[15:0]};  
+								`WORD:
+									data_read_reg = data_read_i;                 	
+								default:
+									data_read_reg = 32'b0;        
 	                		endcase
 	              		end
 	            end	
@@ -82,26 +57,26 @@ module interfaceDataMEM
 				data_read_reg = 32'b0;	  
 		end
 
-
 	always @(*)
 		begin
 			if (mem_signals_i[3]) // memory write
-	            begin    
+	            begin 
 	            	case (mem_signals_i[2:0])
 	                	`BYTE:
 	                		data_write_reg = data_write_i[7:0];                
-	                            
 	                	`HALF_WORD:
 	                    	data_write_reg = data_write_i[15:0];	                    
-
-	                	`WORD:               
+	                	`WORD:            
 	                    	data_write_reg = data_write_i;         
 	                    default:
 	                    	data_write_reg = 32'b0;
 	                endcase
 	            end
 	        else
-	            data_write_reg = 32'b0;
+	            data_write_reg = 32'hffffffff;
 		end
+
+	assign data_write_o = data_write_reg;
+	assign data_read_o  = data_read_reg;
 
 endmodule

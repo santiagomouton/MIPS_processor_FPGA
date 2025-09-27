@@ -44,6 +44,10 @@ module alu
             6'b000010: begin
                 o_o = i_a >> i_b;
             end
+            /* SLLV */
+            6'b000100: begin
+                o_o = i_a << i_b;
+            end
             /* NOR */
             6'b100111: begin
                 o_o = ~(i_a | i_b);

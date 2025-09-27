@@ -1,8 +1,9 @@
-lw R1, 0(0)
-sra R5, R1, R2
-sllv R6, R1, R2
-and R11, R1, R2
-xor R12, R1, R2
-add R13, R1, R2
-slt R15, R1, R2
+addi R4, R9, 1
+addi R3, R9, 200
+sra R5, R3, R4
+sllv R6, R3, R4
+and R11, R3, R4
+xor R12, R3, R4
+add R13, R3, R4
+slt R15, R2, R4
 halt

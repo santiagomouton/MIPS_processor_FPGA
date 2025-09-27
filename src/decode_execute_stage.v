@@ -18,25 +18,23 @@ module decode_execute_stage
 		input wire [NB_DATA-1:0] pc_i,
 		input wire [NB_REG-1:0]	register_a_i, register_b_i, register_rw_i,
 		// input wire [NB_REG-1:0]	shamt_i,
-
-		input wire [NB_FUNCTION-1:0] function_i,
 		input wire [NB_DATA-1:0] data_ra_i,
 		input wire [NB_DATA-1:0] data_rb_i,
 		input wire [NB_DATA-1:0] inm_ext_i,
+		
 		input wire tipeI,
-
+		input wire [NB_FUNCTION-1:0] function_i,
 		input wire [N_REGDEST-1:0] regDest_signal_i,
-
 		input wire [NB_OP-1:0] opcode,
 		input wire [5:0]mem_signals_i,
 		input wire [2:0]wb_signals_i,
 		input wire halt_signal_i,
 
+
 		output wire [NB_DATA-1:0] data_ra_o,
 		output wire [NB_DATA-1:0] data_rb_o,
 		output wire [NB_DATA-1:0] inm_ext_o,
 		output wire tipeI_o,
-
 		// output wire [NB_REG-1:0] shamt_o,
 
 		output wire [NB_DATA-1:0] pc_o,

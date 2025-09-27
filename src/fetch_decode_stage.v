@@ -11,28 +11,34 @@ module fetch_decode_stage
 		input wire [NB_DATA-1:0] pc_i,
 		input wire [NB_DATA-1:0] instruction_i,
 
-		output reg [NB_DATA-1:0] pc_o,
-		output reg [NB_DATA-1:0] instruction_o			
+		output wire [NB_DATA-1:0] pc_o,
+		output wire [NB_DATA-1:0] instruction_o			
 	);
+
+	reg [NB_DATA-1:0] pc_reg;
+	reg [NB_DATA-1:0] instruction_reg;			
 	
 	always @(negedge clock_i)
 		begin
 			if (reset_i) begin
-				pc_o          <= 0;
-				instruction_o <= 0;					
+				pc_reg          <= 0;
+				instruction_reg <= 0;					
 			end else begin
 				if (en_pipeline)
 					begin					
-						pc_o          <= pc_i;
-						instruction_o <= instruction_i;		
+						pc_reg          <= pc_i;
+						instruction_reg <= instruction_i;		
 					end
 					
 				else
 					begin
-						pc_o 		  <= pc_o;
-						instruction_o <= instruction_o;
+						pc_reg 		  	<= pc_reg;
+						instruction_reg <= instruction_reg;
 					end
 			end
 		end
+
+	assign pc_o = pc_reg;	
+	assign instruction_o = instruction_reg;	
 
 endmodule 

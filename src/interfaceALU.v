@@ -27,6 +27,7 @@ module interfaceALU
 							// `SLL_FUNCTION  : reg_alu_op  = `SLL; 
 							6'b000010  : reg_alu_op  = 6'b000010; //SRL
 							6'b000011  : reg_alu_op  = 6'b000011; //SRA
+							6'b000100  : reg_alu_op  = 6'b000100; //SSLV
 							// `SRLV_FUNCTION : reg_alu_op  = `SRL;
 							// `SRAV_FUNCTION : reg_alu_op  = `SRA; 
 							6'b100001  : reg_alu_op  = 6'b100000; //ADDU
@@ -36,7 +37,7 @@ module interfaceALU
 							6'b100101   : reg_alu_op  = 6'b100101; //OR
 							6'b100110  : reg_alu_op  = 6'b100110; //XOR
 							6'b100111  : reg_alu_op  = 6'b100111; //NOR
-							// `SLT_FUNCTION  : reg_alu_op  = `SLT;
+							6'b101010  : reg_alu_op  = 6'b101010; //SLT
 							default : reg_alu_op = funct;
 							// default : reg_alu_op = 6'b000000;
 						endcase
@@ -44,7 +45,8 @@ module interfaceALU
 				6'b001000 : reg_alu_op = 6'b100000;  // ADDI -> ADD
 				6'b001100 : reg_alu_op = 6'b100100;  // ANDI -> AND
 				6'b001101 : reg_alu_op = 6'b100101;  // ORI -> OR
-				6'b100011 : reg_alu_op = 6'b100000;	 // LW -> ADD 
+				6'b100011 : reg_alu_op = 6'b100000;	 // LW -> ADD
+				6'b101011 : reg_alu_op = 6'b100000;	 // SW -> ADD
 				6'b010011 : reg_alu_op = 6'b100000;	 // LWU -> ADD 
 				6'b100000 : reg_alu_op = 6'b100000;	 // LB -> ADD 
 				// `SLTI_ALUCODE     :	reg_alu_op = `SLT;

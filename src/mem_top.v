@@ -47,9 +47,11 @@ module mem_top
         .reset_i(reset_i),
         .enable_mem_i(en_pipeline), 
         .addr_i(addr_mem),
+        // .addr_i(6'b000011),
         .data_write_i(data_wr_to_mem_interface_o),
-        .mem_read_i(mem_signals[4]),    //señales para escritura o lectura
-        .mem_write_i(mem_signals[3]),   //
+        // .data_write_i(data_wr_to_mem),
+        .mem_read_i(mem_signals[4]),    //señales para lectura 
+        .mem_write_i(mem_signals[3]),   // o escritura
         .data_o(DATAmem_o)
     );
 

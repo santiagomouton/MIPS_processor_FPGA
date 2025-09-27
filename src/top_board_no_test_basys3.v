@@ -83,6 +83,11 @@ module top_board_no_test_basys3
 
     wire halt_signal_o_wb;
 
+    wire [124:0] decode_signals_o;  
+    wire [136:0] execute_signals_o; 
+    wire [78:0] mem_signals_o;
+    wire [33:0] wb_signals_o;
+
     wire [31:0] wire_inmediate_paraver;
 
     top_pipeline mips(
@@ -112,6 +117,11 @@ module top_board_no_test_basys3
 
         .halt_signal_o_wb(halt_signal_o_wb),
         .halt_signal_decode_debug(halt_signal_decode),
+
+        .decode_signals_o(decode_signals_o),
+        .execute_signals_o(execute_signals_o),
+        .mem_signals_o(mem_signals_o),
+        .wb_signals_o(wb_signals_o),
 
         .alu_result_o_mem_test(),
 
@@ -145,6 +155,11 @@ module top_board_no_test_basys3
         .en_read_mem(en_read_inst),
 
         .alu_result_o_mem_test(),
+
+        .decode_signals_i(decode_signals_o),
+        .execute_signals_i(execute_signals_o),
+        .mem_signals_i(mem_signals_o),
+        .wb_signals_i(wb_signals_o),
 
         .wire_inmediate_paraver(wire_inmediate_paraver)
 	);

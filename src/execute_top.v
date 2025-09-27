@@ -13,20 +13,20 @@ module execute_top
 		input wire [NB_DATA-1:0] inmediate_i,
 		input wire tipeI_i,
 		// input wire [NB_REG-1:0]	shamt_i,
-		input wire [NB_REG-1:0]	wire_RW, wire_B,
+		input wire [NB_REG-1:0]	wire_RW_i, wire_B_i,
 		input wire [2-1:0] regDest_signal_i,
 
-		input wire [1:0] forward_signal_regA,
-		input wire [1:0] forward_signal_regB,
-		input wire [NB_DATA-1:0] ex_mem_data,
-		input wire [NB_DATA-1:0] mem_wb_data,
+		input wire [1:0] forward_signal_regA_i,
+		input wire [1:0] forward_signal_regB_i,
+		input wire [NB_DATA-1:0] ex_mem_data_i,
+		input wire [NB_DATA-1:0] mem_wb_data_i,
 		
 		output wire [NB_DATA-1:0] data_rb_o,
 		output wire [NB_REG-1:0] writeReg_o,
         output wire [NB_DATA-1:0] alu_result_o,
 
 		//test
-		output wire [NB_DATA-1:0] o_B_to_alu_paraver,
+		output wire [NB_DATA-1:0] data_ra_paraver,
 		output wire [6-1:0] funct_for_alu_paraver
 	);
 	
@@ -41,7 +41,7 @@ module execute_top
 
 
 	//test
-	assign o_B_to_alu_paraver 	 = o_B_to_alu;
+	assign data_ra_paraver 	 = data_ra_i;
 	assign funct_for_alu_paraver = funct_for_alu;
 
     alu alu
@@ -62,18 +62,18 @@ module execute_top
 	multiplexor_3_in forward_inputA
 	(
 		.op1_i(data_ra_i),
-		.op2_i(ex_mem_data),
-		.op3_i(mem_wb_data),		
-		.sel_i(forward_signal_regA),          
+		.op2_i(ex_mem_data_i),
+		.op3_i(mem_wb_data_i),		
+		.sel_i(forward_signal_regA_i),          
 		.data_o(data_ra)
 	);
 
 	multiplexor_3_in forward_inputB
 	(
 		.op1_i(data_rb_i),
-		.op2_i(ex_mem_data),
-		.op3_i(mem_wb_data),		
-		.sel_i(forward_signal_regB),          
+		.op2_i(ex_mem_data_i),
+		.op3_i(mem_wb_data_i),		
+		.sel_i(forward_signal_regB_i),          
 		.data_o(data_rb)
 	);
 
@@ -87,8 +87,8 @@ module execute_top
 
     multiplexor_3_in#(.NB_DATA(NB_REG)) wireB_or_wireRW
     (
-		.op1_i(wire_B),
-		.op2_i(wire_RW),
+		.op1_i(wire_B_i),
+		.op2_i(wire_RW_i),
 		.op3_i(5'd31),		
 		.sel_i(regDest_signal_i),          
 		.data_o(writeReg_o)
