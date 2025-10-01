@@ -148,7 +148,7 @@ module decode_top
 	control_unit control_unit
 	(
         .opcode_i(operation),
-        // .funct(funct),
+        .funct(funct),
 		
 		.tipeI_o(tipeI_signal_ctr),
  		.shamt_o(shamt_signal_ctr),
