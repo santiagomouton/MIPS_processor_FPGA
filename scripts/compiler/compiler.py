@@ -35,7 +35,7 @@ def binario_a_hexadecimal(binario):
         hexadecimal = "0" * (8 - longitud_actual) + hexadecimal
     return hexadecimal
 
-file   = open ('../../mips_codes/load.txt','r')
+file   = open ('../../mips_codes/instruction1.txt','r')
 string = file.read()
 file.close()
 line = string.strip()
@@ -58,7 +58,7 @@ for item in programa:
             rd = registros[instruction[1].replace(',','')]
             instruction_ass = "000000" + str(rs) + "00000" + str(rd) + "00000" + str(function)		
         elif (instruction[0] == "jr"):
-            rs = registros[instruction[1].replace(',','')]
+            rs = registros[instruction[1]]
             instruction_ass = "000000" + str(rs) + "00000" + "00000" + "00000" + str(function)	
         else:
             rs = registros[instruction[2].replace(',','')]

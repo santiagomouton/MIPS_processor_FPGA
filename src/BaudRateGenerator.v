@@ -19,6 +19,7 @@ module BaudRateGenerator
 );    
     // counter ticks
     reg [8: 0]  counTicks;
+    // reg [8: 0]  counTicks;
     
     /**
     * Lista de Sensibilidades : 

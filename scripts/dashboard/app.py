@@ -16,7 +16,20 @@ puerto_serial = serial.Serial('COM4', baudrate=9600, timeout=1, bytesize=serial.
 data = {
     "registers": [["0000"] for _ in range(32)],  # Stack de registros (32 filas de 32 bits)
     "memory": [["0000"] for _ in range(32)],    # Stack de memoria (32 filas de 32 bits)
-    "pc": ["0000"]  # Program Counter (32 bits)
+    "pc": ["0000"],  # Program Counter (32 bits)
+    "decode_signals": [""],
+    "execute_signals": [""],
+    "memory_signals": [""],
+    "writeback_signals": [""]
+    # "decode_signals": {"shamt_signal": "0", "opcode": "0", "funct": "0", "pc_branch_or_jump": "0", 
+    #                    "address_jump": "0", "address_branch": "0", "address_register": "0", "pc_src": "0",
+    #                    "halt_signal": "0", "tipeI_signal": "0", "regDest_signal": "0", "mem_signals": "0",
+    #                    "wb_signals": "0"},
+    # "execute_signals": {"forward_signal_regA": "0", "forward_signal_regB": "0", "alu_result_o_mem": "0",
+    #                     "data_write_to_reg": "0", "data_rb": "0", "writeReg_execute": "0", "alu_result_execute": "0"},
+    # "memory_signals": {"data_read_interface": "0", "alu_result_o_mem": "0", "writeReg_o_mem": "0", 
+    #                    "wb_signals_o_mem": "0", "halt_signal_o_mem": "0"},
+    # "writeback_signals": {"data_write_to_reg": "0"}
 }
 
 
@@ -24,68 +37,25 @@ def read_uart():
     """Lee datos UART y actualiza las estructuras."""
     global data
     # buffer_size = 260  # 128 + 128 + 4 = tamaño fijo por ciclo
-    buffer_size = 644  # (32*4) + (128*4) + 1 = tamaño fijo por ciclo
+    # buffer_size = 644  # (32*4) + (128*4) + 1 = tamaño fijo por ciclo
+    buffer_size = 691  # (32*4) + (128*4) + 4(pc) + 47 = tamaño fijo por ciclo
     # buffer_size = 129
+    offset_signals = 644
 
     while True:
-        # for i in range(32):
-        #     data["registers"][i]= random.randbytes(4).hex()
-        #     data["memory"][i]=random.randbytes(4).hex()
-        # data["pc"]=random.randbytes(4).hex()
-
-        # # print(data)
-
-        # # Enviar el paquete completo
-        # time.sleep(8)  # Pausa de 1 segundo entre paquetes
-        time.sleep(0.5)
-        # bytes_disponibles = puerto_serial.in_waiting
-
-        # if bytes_disponibles > 1:
-        #     print(f"Número de bytes disponibles para leer: {bytes_disponibles}")
-
-        # while puerto_serial.in_waiting >= 1:
-        #     datos_escritura = puerto_serial.read(1)
-        #     #for i in range(88):
-        #     #datass = datos_escritura[i]
-        #     #print(datass.hex())
-        #     print( datos_escritura.hex())
 
 
         try:
-            # if puerto_serial.in_waiting >= buffer_size:
-            #     # Leer un paquete completo
-            #     raw_data = puerto_serial.read(buffer_size)
-
-            #     # print(raw_data[0])
-            #     print(raw_data)
-                
-            #     print("\n", raw_data.hex(), "\n\n")
 
             # if puerto_serial.in_waiting >= 128:
-            time.sleep(0.5)
-            # bytes_disponibles = puerto_serial.in_waiting
-            # if bytes_disponibles > 1:
-            #     print(f"Número de bytes disponibles para leer: {bytes_disponibles}")
-            print(puerto_serial.in_waiting)
+            bytes_disponibles = puerto_serial.in_waiting
+            if bytes_disponibles > 1:
+                time.sleep(0.4)
+                print(f"Número de bytes disponibles para leer: {bytes_disponibles}")
+            # print(puerto_serial.in_waiting)
             if puerto_serial.in_waiting == buffer_size:
                 # datos_binarios = puerto_serial.read(128)
                 datos_binarios = puerto_serial.read(buffer_size)
-                
-                # if datos_binarios == b'':
-                #     break
-                # for i in range(32):  # 32 filas
-                #     aux=i*4
-                #     datos_binarios_fila = datos_binarios[aux:aux+4]
-                #     print("reg:", i, datos_binarios_fila[::-1].hex(), flush=True)
-                
-                # for i in range(128):  # 32 filas
-                #     aux=128+(i*4)
-                #     datos_binarios_fila = datos_binarios[aux:aux+4]
-                #     print("mem:", i, datos_binarios_fila[::-1].hex(), flush=True)
-
-                # datos_binarios_fila = datos_binarios[buffer_size-1:]
-                # # datos_binarios_fila = datos_binarios[buffer_size-4:]
-                # print("pc:", datos_binarios_fila.hex(), flush=True)
                 
                            
                 # Procesar memoria de registros
@@ -114,6 +84,24 @@ def read_uart():
                 data["pc"] = pc_data[::-1].hex()
                 print(pc_data[::-1].hex())
 
+
+                full_signals_data = datos_binarios[offset_signals:]
+                full_signals_data = full_signals_data[::-1]
+                bits = ''.join(f'{byte:08b}' for byte in full_signals_data)
+                print(f"tamaño={len(full_signals_data)} \n full_signals_data: {bits}")
+
+                # Procesar signals
+                decode_data = bits[0:125] # 16 = 125 bits
+                data["decode_signals"] = decode_data
+
+                execute_data = bits[125:125+137] # 18 = 137 bits
+                data["execute_signals"] = execute_data
+
+                memory_data = bits[125+137:125+137+79] # 10 = 73 bits
+                data["memory_signals"] = memory_data
+
+                writeback_data = bits[125+137+79:]
+                data["writeback_signals"] = writeback_data
 
         except Exception as e:
             print(f"Error leyendo UART: {e}")
@@ -152,6 +140,7 @@ def index():
 
 @app.route("/data", methods=['GET'])
 def get_data():
+    time.sleep(0.4)
     """API para enviar los datos actuales."""
     return jsonify(data)
 
@@ -210,7 +199,7 @@ def send_command():
 
     print("datos_a_enviar=",datos_a_enviar, "datos_binarios=", datos_binarios)
 
-    time.sleep(1.5)
+    time.sleep(0.8)
     return jsonify({"response": datos_a_enviar})
 
 

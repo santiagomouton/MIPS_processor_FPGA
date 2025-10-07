@@ -17,10 +17,12 @@ function updateTables(data) {
     const registersTable = document.getElementById("registers").querySelector("tbody");
     const memoryTable = document.getElementById("memory").querySelector("tbody");
     const pcDisplay = document.getElementById("pc");
+    const signals = document.getElementById("signals").querySelector("tbody");
 
     // Limpiar tablas existentes
     registersTable.innerHTML = "";
     memoryTable.innerHTML = "";
+    signals.innerHTML = "";
 
     // Actualizar stack de registros
     data.registers.forEach((row, index) => {
@@ -48,6 +50,47 @@ function updateTables(data) {
 
     // Actualizar el Program Counter
     pcDisplay.textContent = `PC: ${data.pc}`;
+
+    // Actualizar los signals
+    const tr_decode = document.createElement("tr");
+    const tdLabel_decode = document.createElement("td");
+    tdLabel_decode.textContent = "DECODE";
+    const tdLabel_decode_value = document.createElement("td");
+    tdLabel_decode_value.textContent = data.decode_signals;
+    tdLabel_decode_value.style.textAlign = "left";
+    tr_decode.appendChild(tdLabel_decode);
+    tr_decode.appendChild(tdLabel_decode_value);
+    signals.appendChild(tr_decode);
+
+    const tr_execute = document.createElement("tr");
+    const tdLabel_execute = document.createElement("td");
+    tdLabel_execute.textContent = "EXECUTE";
+    const tdLabel_execute_value = document.createElement("td");
+    tdLabel_execute_value.textContent = data.execute_signals;
+    tdLabel_execute_value.style.textAlign = "left";
+    tr_execute.appendChild(tdLabel_execute);
+    tr_execute.appendChild(tdLabel_execute_value);
+    signals.appendChild(tr_execute);
+
+    const tr_memory = document.createElement("tr");
+    const tdLabel_memory = document.createElement("td");
+    tdLabel_memory.textContent = "MEMORY";
+    const tdLabel_memory_value = document.createElement("td");
+    tdLabel_memory_value.textContent = data.memory_signals;
+    tdLabel_memory_value.style.textAlign = "left";
+    tr_memory.appendChild(tdLabel_memory);
+    tr_memory.appendChild(tdLabel_memory_value);
+    signals.appendChild(tr_memory);
+
+    const tr_writeback = document.createElement("tr");
+    const tdLabel_writeback = document.createElement("td");
+    tdLabel_writeback.textContent = "WRITEBACK";
+    const tdLabel_writeback_value = document.createElement("td");
+    tdLabel_writeback_value.textContent = data.writeback_signals;
+    tdLabel_writeback_value.style.textAlign = "left";
+    tr_writeback.appendChild(tdLabel_writeback);
+    tr_writeback.appendChild(tdLabel_writeback_value);
+    signals.appendChild(tr_writeback);
 }
 
 // Configurar un intervalo para obtener datos periódicamente

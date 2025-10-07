@@ -7,37 +7,39 @@ module decode_forward
 	)
 
 	(
-		input wire [NB_REG-1:0] wire_A_dec,
-		input wire [NB_REG-1:0] wire_B_dec,
+		input wire [NB_REG-1:0] wire_A_dec_i,
+		input wire [NB_REG-1:0] wire_B_dec_i,
 		
-		input wire [NB_REG-1:0] writeReg,
-		input wire ex_mem_reg_write,	
+		input wire [NB_REG-1:0] writeReg_mem_i,
+		input wire ex_mem_reg_write_i,
 
-		output reg decode_forward_A, decode_forward_B
+		input wire [NB_REG-1:0] writeReg_wb_i,
+		input wire mem_wb_reg_write_i,
+
+		output reg[1:0] decode_forward_A, decode_forward_B
 	);
 
 	initial 
 		begin
-			decode_forward_A = 0;
-			decode_forward_B = 0;
+			decode_forward_A = 2'b00;
+			decode_forward_B = 2'b00;
 		end
 
 	always @(*)
 		begin
-			/* if ((ex_mem_reg_write == 1'b1) && (wire_A_dec == writeReg))
-				decode_forward_A = 1'b1;//viene de la etapa MEM		
+			if ((ex_mem_reg_write_i == 1'b1) && (wire_A_dec_i == writeReg_mem_i))
+				decode_forward_A = 2'b01;	//viene de la etapa MEM		
+			else if ((mem_wb_reg_write_i == 1'b1) && (wire_A_dec_i == writeReg_wb_i))
+				decode_forward_A = 2'b10;	//viene de la etapa WB		
 			else
-				decode_forward_A = 1'b0;
-			 */
-			decode_forward_A = ((ex_mem_reg_write == 1'b1) && (wire_A_dec == writeReg))? 1'b1  //viene de la etapa MEM
-																						:1'b0;
+				decode_forward_A = 2'b00;
 
-			decode_forward_B = ((ex_mem_reg_write == 1'b1) && (wire_B_dec == writeReg))? 1'b1  //viene de la etapa MEM
-																						:1'b0;
-			/* if ((ex_mem_reg_write == 1'b1) && (wire_B_dec == writeReg))
-				decode_forward_B = 1'b1;//viene de la etapa MEM			
+			if ((ex_mem_reg_write_i == 1'b1) && (wire_B_dec_i == writeReg_mem_i))
+				decode_forward_B = 2'b01;	//viene de la etapa MEM	
+			else if ((mem_wb_reg_write_i == 1'b1) && (wire_B_dec_i == writeReg_wb_i))
+				decode_forward_B = 2'b10;	//viene de la etapa WB
 			else
-				decode_forward_B = 1'b0; */
+				decode_forward_B = 2'b00;
 		end
 
 endmodule

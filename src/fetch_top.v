@@ -32,8 +32,10 @@ module fetch_top
 
 	wire [NB_DATA-1:0] pc_src_entry_addr;
 	wire [NB_DATA-1:0] pc_addr_in;
-	
+	wire [NB_DATA-1:0] instruction_INSTmem_o;
+
 	assign pc_o = next_addr_plus_four_o;
+	assign instruction_o = (pc_branch_or_jump) ? {32'b0} : instruction_INSTmem_o;
 
 	multiplexor_3_in pc_src_entry
 	(
@@ -71,7 +73,7 @@ module fetch_top
 		.en_write_i(en_write_i),
 		.en_read_i(en_read_i),
 		.data_i(data_i),
-		.data_o(instruction_o)
+		.data_o(instruction_INSTmem_o)
 	);
 
 

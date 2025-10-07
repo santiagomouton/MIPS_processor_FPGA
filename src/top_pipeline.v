@@ -69,6 +69,7 @@ module top_pipeline
     wire pc_branch_or_jump;
     wire [NB_DATA-1:0] address_jump, address_branch, address_register;
     wire [1:0]pc_src;
+    wire bne, beq;
 
     //decode_execute_stage
     wire [NB_DATA-1:0] data_ra_o_execute, data_rb_o_execute;
@@ -112,27 +113,26 @@ module top_pipeline
     wire stall, pc_write_o, if_dec_write_o;
 
     // decode_forward
-    wire decode_forward_A, decode_forward_B;
+    wire [1:0] decode_forward_A, decode_forward_B;
 
 
     assign data_registers_debug = data_ra_o_decode;
     assign data_mem_debug = data_read_interface_o;
-    // assign data_pc_debug = pc_decode;
-    assign data_pc_debug = pc_fetch;
+    assign data_pc_debug = pc_decode;
+    // assign data_pc_debug = pc_fetch;
 
+    // wire [NB_DATA-1:0] data_ra_branch_paraver, data_rb_branch_paraver;
     assign decode_signals_o = {1'b0, opcode_o_decode, funct_o_decode, pc_branch_or_jump, 
                                 address_jump, address_branch, address_register, pc_src,
                                 halt_signal_decode, tipeI_signal_decode, regDest_signal_decode,
                                 mem_signals_decode, wb_signals_decode
                             };
-    wire [6-1:0] funct_for_alu_paraver;
     wire [NB_DATA-1:0] data_ra_paraver;
     assign execute_signals_o = {forward_signal_regA, forward_signal_regB, alu_result_o_mem,
                                 // data_write_to_reg, 
                                 data_ra_paraver, 
                                 data_rb_o, 
-                                funct_for_alu_paraver[5:1], 
-                                // writeReg_execute, 
+                                writeReg_execute, 
                                 alu_result_execute
                             };
     wire [NB_DATA-1:0] data_wr_to_mem_interface_o_paraver;
@@ -149,10 +149,12 @@ module top_pipeline
 
     decode_forward decode_forward
     (
-        .wire_A_dec(wire_A_o_decode),
-		.wire_B_dec(wire_B_o_decode),
-		.writeReg(writeReg_o_mem),
-		.ex_mem_reg_write(wb_signals_o_mem[2]),	
+        .wire_A_dec_i(wire_A_o_decode),
+		.wire_B_dec_i(wire_B_o_decode),
+		.writeReg_mem_i(writeReg_o_mem),
+		.ex_mem_reg_write_i(wb_signals_o_mem[2]),	
+		.writeReg_wb_i(writeReg_o_wb),
+		.mem_wb_reg_write_i(reg_write_o_wb),
 
 		.decode_forward_A(decode_forward_A), 
         .decode_forward_B(decode_forward_B)        
@@ -160,15 +162,16 @@ module top_pipeline
 
     hazard_unit hazard_unit
     (
-		.dec_ex_mem_read(mem_signals_o_execute[5]),
-		.wire_A_decode(wire_A_o_decode),
-		.wire_B_decode(wire_B_o_decode),
-		.dec_ex_register_b(wire_B_o_execute),
-		// .[NB_REG-1:0] writeReg_execute,
-		.halt_signal(halt_signal_decode),
-
-		.EX_reg_write_i(1'b0), //vacio por ahora
-		.EX_write_register_i(5'b0), //vacio por ahora
+		.execute_stage_mem_read_i(mem_signals_o_execute[4]),
+		.memory_stage_mem_read_i(mem_signals_o_mem[4]),
+        .execute_stage_reg_write_i(wb_signals_o_execute[2]),
+		.branch_or_jr_i(bne|beq),
+		.wire_A_decode_i(wire_A_o_decode),
+		.wire_B_decode_i(wire_B_o_decode),
+		// .dec_ex_register_write_i(wire_B_o_execute),
+		.dec_ex_register_write_i(writeReg_execute),
+		.ex_mem_register_write_i(writeReg_o_mem),
+		.halt_signal_i(halt_signal_decode),
 
         .stall_o(stall),
 		.pc_write_o(pc_write_o), //detiene cargar la sig direccion
@@ -280,8 +283,7 @@ module top_pipeline
         .alu_result_o(alu_result_execute),
 
         //test
-        .data_ra_paraver(data_ra_paraver),
-        .funct_for_alu_paraver(funct_for_alu_paraver)
+        .data_ra_paraver(data_ra_paraver)
     );
 
     decode_execute_stage decode_execute_stage
@@ -347,9 +349,9 @@ module top_pipeline
         .regDest_signal_o(regDest_signal_decode),
         .tipeI_signal_o(tipeI_signal_decode),
 
-        .decode_forward_A(decode_forward_A), 
-        .decode_forward_B(decode_forward_B),
-        .alu_result(alu_result_o_mem),
+        .decode_forward_A_i(decode_forward_A), 
+        .decode_forward_B_i(decode_forward_B),
+        .alu_result_mem_i(alu_result_o_mem),
 
         .shamt_signal_o(), // vacio por ahora
         
@@ -364,14 +366,20 @@ module top_pipeline
 		.address_register_o(address_register),
 		.pc_src_o(pc_src),
         .halt_signal_o(halt_signal_decode),
-        .wire_inmediate_paraver()
+        .bne_o(bne),
+        .beq_o(beq),
+        .wire_inmediate_paraver(),
+        // .data_ra_branch_paraver(data_ra_branch_paraver),
+        // .data_rb_branch_paraver(data_rb_branch_paraver)
+        .data_ra_branch_paraver(),
+        .data_rb_branch_paraver()
     );
 
 	fetch_decode_stage fetch_decode_stage
 	(
 		.clock_i(clock), 
 		.reset_i(reset), 
-		.en_pipeline(en_pipeline && if_dec_write_o),		
+		.en_pipeline(en_pipeline && if_dec_write_o),	
 		.pc_i(pc_fetch),
 		.pc_o(pc_decode),
 		.instruction_i(instruction_fetch),

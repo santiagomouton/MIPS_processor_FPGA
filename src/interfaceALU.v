@@ -24,15 +24,15 @@ module interfaceALU
 					begin
 						case (funct)
 
+							6'b100000  : reg_alu_op  = 6'b100000; //ADD
 							// `SLL_FUNCTION  : reg_alu_op  = `SLL; 
 							6'b000010  : reg_alu_op  = 6'b000010; //SRL
 							6'b000011  : reg_alu_op  = 6'b000011; //SRA
 							6'b000100  : reg_alu_op  = 6'b000100; //SSLV
-							// `SRLV_FUNCTION : reg_alu_op  = `SRL;
-							// `SRAV_FUNCTION : reg_alu_op  = `SRA; 
+							6'b000110 : reg_alu_op  = 6'b000010; //SRLV
+							6'b000111 : reg_alu_op  = 6'b000011; //SRAV
 							6'b100001  : reg_alu_op  = 6'b100000; //ADDU
-							// `SLLV_FUNCTION : reg_alu_op  = `SLL;
-							// `SUBU_FUNCTION  : reg_alu_op = `SUB;
+							6'b100011  : reg_alu_op = 6'b100010; //SUBU
 							6'b100100  : reg_alu_op  = 6'b100100;  //AND
 							6'b100101   : reg_alu_op  = 6'b100101; //OR
 							6'b100110  : reg_alu_op  = 6'b100110; //XOR
@@ -49,8 +49,7 @@ module interfaceALU
 				6'b101011 : reg_alu_op = 6'b100000;	 // SW -> ADD
 				6'b010011 : reg_alu_op = 6'b100000;	 // LWU -> ADD 
 				6'b100000 : reg_alu_op = 6'b100000;	 // LB -> ADD 
-				// `SLTI_ALUCODE     :	reg_alu_op = `SLT;
-				// `LUI_ALUCODE      : reg_alu_op = `LUI;
+				6'b001010 :	reg_alu_op = 6'b101010;  // SLTI -> SLT
 				default :  reg_alu_op = 6'b000000;
 			endcase
 				

@@ -7,15 +7,17 @@ module hazard_unit
 	)
 	(
 
-		input wire dec_ex_mem_read,
-		input wire [NB_REG-1:0] wire_A_decode,
-		input wire [NB_REG-1:0] wire_B_decode,
-		input wire [NB_REG-1:0] dec_ex_register_b,
-		// input wire [NB_REG-1:0] writeReg_execute,
-
-		input wire EX_reg_write_i,
-		input wire [NB_REG-1:0] EX_write_register_i,
-		input wire halt_signal,
+		input wire execute_stage_mem_read_i,
+		input wire memory_stage_mem_read_i,
+		input wire execute_stage_reg_write_i,
+		input wire branch_or_jr_i,
+		input wire [NB_REG-1:0] wire_A_decode_i,
+		input wire [NB_REG-1:0] wire_B_decode_i,
+		input wire [NB_REG-1:0] dec_ex_register_write_i,
+		input wire [NB_REG-1:0] ex_mem_register_write_i,
+		
+		
+		input wire halt_signal_i,
 
 		output reg stall_o,
 		output wire pc_write_o, //detiene cargar la sig direccion
@@ -35,19 +37,30 @@ module hazard_unit
 
 	always @(*)
 		begin
-			if (((dec_ex_mem_read == 1'b1) && ((dec_ex_register_b != 5'b0) && 
-			((dec_ex_register_b == wire_A_decode) || (dec_ex_register_b == wire_B_decode)))) || halt_signal)                
+			// dependencia con Instruccion LOAD
+			if (((execute_stage_mem_read_i == 1'b1) && ((dec_ex_register_write_i != 5'b0) && 
+			((dec_ex_register_write_i == wire_A_decode_i) || (dec_ex_register_write_i == wire_B_decode_i)))) || halt_signal_i)                
 				begin						
 					reg_pc_write = 1'b0;
 					reg_if_dec_write = 1'b0;
 					stall_o = 1'b1;
 				end	
-/* 			else if (EX_reg_write_i == 1'b1 && ((EX_write_register_i != 5'b0) && ((EX_write_register_i == ID_rs_i) || (EX_write_register_i == ID_rt_i))))
+			// instruccion de salto (branch, jump_register) depende de LOAD en stage memory
+	 		else if (memory_stage_mem_read_i == 1'b1 && branch_or_jr_i == 1'b1 && 
+			((ex_mem_register_write_i != 5'b0) && ((ex_mem_register_write_i == wire_A_decode_i) || (ex_mem_register_write_i == wire_B_decode_i))))
 				begin					
 					reg_pc_write = 1'b0;
 					reg_if_dec_write = 1'b0;
 					stall_o = 1'b1;
-				end	 */	
+				end	
+			// instruccion de salto depende de resultado de registro
+	 		else if (execute_stage_reg_write_i == 1'b1 && branch_or_jr_i == 1'b1 &&
+			((dec_ex_register_write_i != 5'b0) && ((dec_ex_register_write_i == wire_A_decode_i) || (dec_ex_register_write_i == wire_B_decode_i))))
+				begin					
+					reg_pc_write = 1'b0;
+					reg_if_dec_write = 1'b0;
+					stall_o = 1'b1;
+				end	
 			else
 				begin
 					reg_pc_write = 1'b1;

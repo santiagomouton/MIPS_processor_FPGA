@@ -19,9 +19,9 @@ module decode_top
 		input wire [NB_REG-1:0] write_register_i,
 		input wire [NB_DATA-1:0] data_rw_i,
 
-		input wire decode_forward_A, 
-        input wire decode_forward_B,
-		input wire [NB_DATA-1:0] alu_result,
+		input wire [1:0] decode_forward_A_i, 
+        input wire [1:0] decode_forward_B_i,
+		input wire [NB_DATA-1:0] alu_result_mem_i,
 
 		input wire stall,
 
@@ -46,7 +46,11 @@ module decode_top
 		output wire [NB_DATA-1:0] address_register_o,
 		output wire [1:0] pc_src_o,
 		output wire halt_signal_o,
-		output wire [31:0] wire_inmediate_paraver
+		output wire bne_o,
+		output wire beq_o,
+		output wire [31:0] wire_inmediate_paraver,
+		output wire [31:0] data_ra_branch_paraver,
+		output wire [31:0] data_rb_branch_paraver
 	);
 
 	wire [NB_REG-1:0] addr_A_out;
@@ -80,15 +84,16 @@ module decode_top
 
     assign wireA_o = wire_A;
     assign wireB_o = wire_B;
-    // assign funct_o = funct;
 	assign wire_inmediate_sign_o = wire_inmediate_sign;
 
 	// wire branch_taken = ((is_equal && beq) | (!is_equal && bne) | jump);
 	wire branch_taken = (is_equal && beq) | (!is_equal && bne);
 	assign pc_branch_or_jump_o = branch_taken | jump;
 
-	assign address_jump_o 	 = pc_decode + {6'b0, wire_direction};
+	assign address_jump_o 	 = {pc_decode[31:28], 2'b00, wire_direction};
 	assign address_register_o  = data_ra;
+	assign bne_o = bne;
+	assign beq_o = beq;
 
     assign mem_signals_o   	= (stall) ? {6'b0} : mem_signals_ctr;
 	assign wb_signals_o     = (stall) ? {3'b0} : wb_signals_ctr;
@@ -148,7 +153,7 @@ module decode_top
 	control_unit control_unit
 	(
         .opcode_i(operation),
-        .funct(funct),
+        .funct_i(funct),
 		
 		.tipeI_o(tipeI_signal_ctr),
  		.shamt_o(shamt_signal_ctr),
@@ -171,21 +176,25 @@ module decode_top
         .extended_o(wire_inmediate_sign) 
 	);	
 
- //OJO CON ESTO, SELECCION QUIZAS INCORRECTA
- 	multiplexor_2_in#(.NB_DATA(NB_DATA)) forward_or_reg_A
+ 	multiplexor_3_in#(.NB_DATA(NB_DATA)) forward_or_reg_A
 	(
 		.op1_i(data_ra),
-		.op2_i(alu_result), //1
-		.sel_i(decode_forward_A),
+		.op2_i(alu_result_mem_i), //1
+		.op3_i(data_rw_i),
+		.sel_i(decode_forward_A_i),
 		.data_o(data_ra_branch)
 	);
-    multiplexor_2_in#(.NB_DATA(NB_DATA)) forward_or_reg_B
+    multiplexor_3_in#(.NB_DATA(NB_DATA)) forward_or_reg_B
 	(
 		.op1_i(data_rb),
-		.op2_i(alu_result),
-		.sel_i(decode_forward_B),
+		.op2_i(alu_result_mem_i),
+		.op3_i(data_rw_i),
+		.sel_i(decode_forward_B_i),
 		.data_o(data_rb_branch)
 	);
+
+	assign data_ra_branch_paraver = data_ra_branch;
+	assign data_rb_branch_paraver = data_rb_branch;
 
 endmodule
 

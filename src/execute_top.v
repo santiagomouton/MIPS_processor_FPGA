@@ -26,12 +26,10 @@ module execute_top
         output wire [NB_DATA-1:0] alu_result_o,
 
 		//test
-		output wire [NB_DATA-1:0] data_ra_paraver,
-		output wire [6-1:0] funct_for_alu_paraver
+		output wire [NB_DATA-1:0] data_ra_paraver
 	);
 	
 
-	assign data_rb_o = data_rb_i;
 
 	wire [NB_DATA-1:0] o_B_to_alu;
 	wire [6-1:0] funct_for_alu;
@@ -42,7 +40,7 @@ module execute_top
 
 	//test
 	assign data_ra_paraver 	 = data_ra_i;
-	assign funct_for_alu_paraver = funct_for_alu;
+	assign data_rb_o = data_rb;
 
     alu alu
     (
@@ -89,12 +87,12 @@ module execute_top
     (
 		.op1_i(wire_B_i),
 		.op2_i(wire_RW_i),
-		.op3_i(5'd31),		
+		.op3_i(5'd30),
 		.sel_i(regDest_signal_i),          
 		.data_o(writeReg_o)
     );
 
-/* 	Mux2_1 #(.NB_DATA(32)) mux_alu_src_A	
+/* 	multiplexor_2_in #(.NB_DATA(32)) mux_alu_src_A	
 	(
 		.inA({{27'b0},shamt_i}), // sel = 1
 		.inB(out_mux_forwardA), 

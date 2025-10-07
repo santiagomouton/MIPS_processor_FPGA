@@ -29,7 +29,6 @@ module fetch_decode_stage
 						pc_reg          <= pc_i;
 						instruction_reg <= instruction_i;		
 					end
-					
 				else
 					begin
 						pc_reg 		  	<= pc_reg;

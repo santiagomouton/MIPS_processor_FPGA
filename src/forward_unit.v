@@ -20,12 +20,6 @@ module forward_unit
 		output reg [1:0] forward_signal_regB
 	);
 
-/* 	initial
-		begin
-			forward_A_o = 2'b00;
-			forward_B_o = 2'b00;
-		end */
-
 	always @(*)
 		begin
 			if ((ex_mem_reg_write_i == 1'b1) && (register_a_i == ex_mem_writeReg_i))

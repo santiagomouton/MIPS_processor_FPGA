@@ -1,0 +1,10 @@
+addi R4, R9, 1
+addi R8, R9, 4
+addu R3, R4, R9
+srlv R5, R8, R4
+sllv R6, R4, R8
+and R11, R3, R4
+xor R12, R8, R4
+addu R13, R3, R4
+slt R15, R4, R8
+halt

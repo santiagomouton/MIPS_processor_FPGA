@@ -58,7 +58,7 @@ module decode_execute_stage
 	reg [N_REGDEST-1:0] regDest_signal_reg;
 	reg [NB_OP-1:0] opcode_reg;
 	reg [5:0]mem_signals_reg;
-	reg [5:0]wb_signals_reg;
+	reg [2:0]wb_signals_reg;
 	reg halt_signal_reg;
 
 
@@ -72,11 +72,11 @@ module decode_execute_stage
 					inm_ext_reg  		<= 32'b0;
 					// shamt_reg    <= 5'b0;
 					function_reg 		<= 6'b0;
-					regDest_signal_reg 	<= 2'b10;
+					regDest_signal_reg 	<= 2'b00;
 					opcode_reg 			<= 6'b0;
 					tipeI_reg 			<= 1'b0;
 					mem_signals_reg 	<= 6'b0;
-					wb_signals_reg 		<= 6'b0;
+					wb_signals_reg 		<= 2'b0;
 					halt_signal_reg 	<= 1'b0;
 				end
 			else

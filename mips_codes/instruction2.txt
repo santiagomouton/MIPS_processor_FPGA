@@ -1,0 +1,11 @@
+addi R7, R28, 170
+addi R8, R28, 181
+sw R7, 1(0)
+lw R9, 1(0)
+beq R7, R9, 2
+addi R20, R8, 5
+addi R21, R8, 5
+bne R7, R9, 2
+addi R25, R8, 5
+addi R26, R8, 5
+halt
